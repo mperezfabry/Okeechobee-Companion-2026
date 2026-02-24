@@ -1,0 +1,211 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Serverless backend for Okeechobee App
+
+Globals:
+  Api:
+    Cors:
+      AllowMethods: "'GET,POST,OPTIONS'"
+      AllowHeaders: "'Content-Type,Authorization'"
+      AllowOrigin: "'*'"
+
+Resources:
+  # 1. The Database of Users
+  OkeeUserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: okee-attendees
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireUppercase: true
+      AutoVerifiedAttributes:
+        - email
+
+  # 2. The App Connection
+  OkeeUserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: okee-pwa-client
+      UserPoolId: !Ref OkeeUserPool
+      ExplicitAuthFlows:
+        - ALLOW_USER_SRP_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+      GenerateSecret: false
+
+  # 3. Festival Data Table (Artists, Stages, POIs)
+  FestDataTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: okee-fest-data
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: EntityId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: EntityId
+          KeyType: HASH
+
+  # 4. User Data Table (Profiles, Locations, Friends)
+  UserDataTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: okee-user-data
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: UserId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: UserId
+          KeyType: HASH
+          
+  # 5. The API Gateway
+  OkeeApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Prod
+      Cors:
+        AllowMethods: "'GET,POST,OPTIONS'"
+        AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+        AllowOrigin: "'*'"
+
+  # 6. Spotify OAuth Lambda Function
+  SpotifyAuthFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: spotify_auth.lambda_handler
+      Runtime: python3.12
+      Policies:
+        - SSMParameterReadPolicy:
+            ParameterName: SpotifyClientSecret
+      Environment:
+        Variables:
+          SPOTIFY_CLIENT_ID: '{{resolve:ssm:SpotifyClientId}}'
+          SPOTIFY_SECRET_NAME: 'SpotifyClientSecret'
+      Events:
+        AuthRoute:
+          Type: Api
+          Properties:
+            RestApiId: !Ref OkeeApi
+            Path: /auth/spotify
+            Method: GET
+
+  # 7. Spotify OAuth Callback Function
+  SpotifyCallbackFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: spotify_callback.lambda_handler
+      Runtime: python3.12
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserDataTable
+        - SSMParameterReadPolicy:
+            ParameterName: SpotifyClientSecret
+      Environment:
+        Variables:
+          SPOTIFY_CLIENT_ID: '{{resolve:ssm:SpotifyClientId}}'
+          SPOTIFY_SECRET_NAME: 'SpotifyClientSecret'
+      Events:
+        CallbackRoute:
+          Type: Api
+          Properties:
+            RestApiId: !Ref OkeeApi
+            Path: /auth/callback
+            Method: GET
+
+  # 8. Location Update Function
+  UpdateLocationFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: update_location.lambda_handler
+      Runtime: python3.12
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserDataTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref FestDataTable
+      Events:
+        LocationRoute:
+          Type: Api
+          Properties:
+            RestApiId: !Ref OkeeApi
+            Path: /location
+            Method: POST
+
+  # 9. Get Map Data Function
+  GetMapDataFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: get_map_data.lambda_handler
+      Runtime: python3.12
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserDataTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref FestDataTable  # Added missing permissions
+      Events:
+        MapDataRoute:
+          Type: Api
+          Properties:
+            RestApiId: !Ref OkeeApi
+            Path: /map  # Changed to match frontend
+            Method: GET
+
+  # 10. Manage Friends Function
+  ManageFriendsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: manage_friends.lambda_handler
+      Runtime: python3.12
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserDataTable
+      Events:
+        FriendsPostRoute:
+          Type: Api
+          Properties:
+            RestApiId: !Ref OkeeApi
+            Path: /friends
+            Method: POST
+        FriendsGetRoute:
+          Type: Api
+          Properties:
+            RestApiId: !Ref OkeeApi
+            Path: /friends
+            Method: GET
+
+  # 11. Automated Schedule Scraper
+  SyncScheduleFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: sync_schedule.lambda_handler
+      Runtime: python3.12
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref FestDataTable
+
+  # 12. SOS Toggle Function
+  UpdateSosFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: update_sos.lambda_handler
+      Runtime: python3.12
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserDataTable
+      Events:
+        SosRoute:
+          Type: Api
+          Properties:
+            RestApiId: !Ref OkeeApi
+            Path: /sos
+            Method: POST

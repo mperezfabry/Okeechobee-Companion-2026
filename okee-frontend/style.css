@@ -1,0 +1,37 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+    overflow: hidden; /* Prevents pull-to-refresh on mobile */
+    font-family: sans-serif;
+}
+
+#map {
+    height: 100%;
+    width: 100%;
+    z-index: 1;
+}
+
+#ui-layer {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 1000; /* Stays above the Leaflet map */
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+button {
+    padding: 12px 20px;
+    background: #222;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+}
+
+#sos-btn {
+    background: #d93025;
+}
