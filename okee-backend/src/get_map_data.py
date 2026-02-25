@@ -15,6 +15,8 @@ class DecimalEncoder(json.JSONEncoder):
 dynamodb = boto3.resource('dynamodb')
 user_table = dynamodb.Table('okee-user-data')
 fest_table = dynamodb.Table('okee-fest-data') 
+lineup_table = dynamodb.Table('okee-lineup-data') 
+reports_table = dynamodb.Table('okee-map-reports') 
 
 def lambda_handler(event, context):
     query_params = event.get('queryStringParameters', {}) or {}
@@ -30,14 +32,14 @@ def lambda_handler(event, context):
         }
 
     try:
-        # 1. Get the requesting user's profile to find their friend list
+        # 1. Get friend list and permissions
         user_response = user_table.get_item(Key={'UserId': user_id})
         user_doc = user_response.get('Item', {})
         friend_ids = list(user_doc.get('Friends', {}).keys())
         
         friends_location_data = []
 
-        # 2. Fetch friend data if they have friends
+        # 2. Fetch friend data with Privacy Wall logic
         if friend_ids:
             keys_to_get = [{'UserId': fid} for fid in friend_ids]
             batch_response = dynamodb.batch_get_item(
@@ -59,7 +61,6 @@ def lambda_handler(event, context):
                 if base_location_shared and 'CurrentLocation' in f_doc:
                     friend_zone_type = f_doc.get('ZoneType', 'OUT_OF_BOUNDS')
                     
-                    # --- THE PRIVACY WALL ---
                     is_visible = False
                     if friend_zone_type == 'VENUE':
                         is_visible = True
@@ -84,21 +85,16 @@ def lambda_handler(event, context):
                                  Attr('SosStatus.broadcastTarget').eq('everyone') &
                                  Attr('CurrentLocation.geohash').begins_with(search_geohash_prefix)
             )
-            
             for alert in sos_response.get('Items', []):
                 if alert['UserId'] != user_id and alert['UserId'] not in friend_ids:
-                    sos_alerts.append({
-                        'user_id': alert['UserId'],
-                        'location': alert['CurrentLocation']
-                    })
+                    sos_alerts.append({ 'user_id': alert['UserId'], 'location': alert['CurrentLocation'] })
 
-        # 4. Fetch all geofenced zones for the map
-        zones_response = fest_table.scan(
-            FilterExpression="#t = :val",
-            ExpressionAttributeNames={"#t": "Type"},
-            ExpressionAttributeValues={":val": "Zone"}
-        )
-        zones = zones_response.get('Items', [])
+        # 4. Fetch Map Geofences, Lineup, and Reports
+        zones = fest_table.scan(FilterExpression="#t = :val", ExpressionAttributeNames={"#t": "Type"}, ExpressionAttributeValues={":val": "Zone"}).get('Items', [])
+        
+        # Pull the newly seeded data
+        lineup = lineup_table.scan().get('Items', [])
+        reports = reports_table.scan().get('Items', [])
 
         return {
             'statusCode': 200,
@@ -110,13 +106,11 @@ def lambda_handler(event, context):
             'body': json.dumps({
                 'friends': friends_location_data,
                 'nearby_sos': sos_alerts,
-                'zones': zones
+                'zones': zones,
+                'lineup': lineup,
+                'reports': reports
             }, cls=DecimalEncoder)
         }
 
     except ClientError as e:
-        return {
-            'statusCode': 500, 
-            'headers': {'Access-Control-Allow-Origin': '*'},
-            'body': json.dumps({'error': str(e)})
-        }
+        return { 'statusCode': 500, 'headers': {'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'error': str(e)}) }

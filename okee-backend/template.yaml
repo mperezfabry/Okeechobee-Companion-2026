@@ -10,32 +10,7 @@ Globals:
       AllowOrigin: "'*'"
 
 Resources:
-  # 1. The Database of Users
-  OkeeUserPool:
-    Type: AWS::Cognito::UserPool
-    Properties:
-      UserPoolName: okee-attendees
-      Policies:
-        PasswordPolicy:
-          MinimumLength: 8
-          RequireLowercase: true
-          RequireNumbers: true
-          RequireUppercase: true
-      AutoVerifiedAttributes:
-        - email
-
-  # 2. The App Connection
-  OkeeUserPoolClient:
-    Type: AWS::Cognito::UserPoolClient
-    Properties:
-      ClientName: okee-pwa-client
-      UserPoolId: !Ref OkeeUserPool
-      ExplicitAuthFlows:
-        - ALLOW_USER_SRP_AUTH
-        - ALLOW_REFRESH_TOKEN_AUTH
-      GenerateSecret: false
-
-  # 3. Festival Data Table (Artists, Stages, POIs)
+  # 1. Festival Data Table (Artists, Stages, POIs)
   FestDataTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -48,7 +23,7 @@ Resources:
         - AttributeName: EntityId
           KeyType: HASH
 
-  # 4. User Data Table (Profiles, Locations, Friends)
+  # 2. User Data Table (Profiles, Locations, Friends)
   UserDataTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -60,6 +35,24 @@ Resources:
       KeySchema:
         - AttributeName: UserId
           KeyType: HASH
+
+  # 3. Lineup Data Table
+  OkeeLineupTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      TableName: okee-lineup-data
+      PrimaryKey:
+        Name: ArtistId
+        Type: String
+
+  # 4. Map Reports Table
+  OkeeReportsTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      TableName: okee-map-reports
+      PrimaryKey:
+        Name: ReportId
+        Type: String
           
   # 5. The API Gateway
   OkeeApi:
@@ -148,13 +141,17 @@ Resources:
         - DynamoDBCrudPolicy:
             TableName: !Ref UserDataTable
         - DynamoDBCrudPolicy:
-            TableName: !Ref FestDataTable  # Added missing permissions
+            TableName: !Ref FestDataTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref OkeeLineupTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref OkeeReportsTable
       Events:
         MapDataRoute:
           Type: Api
           Properties:
             RestApiId: !Ref OkeeApi
-            Path: /map  # Changed to match frontend
+            Path: /map
             Method: GET
 
   # 10. Manage Friends Function
@@ -190,7 +187,7 @@ Resources:
       Runtime: python3.12
       Policies:
         - DynamoDBCrudPolicy:
-            TableName: !Ref FestDataTable
+            TableName: !Ref OkeeLineupTable
 
   # 12. SOS Toggle Function
   UpdateSosFunction:
@@ -209,3 +206,38 @@ Resources:
             RestApiId: !Ref OkeeApi
             Path: /sos
             Method: POST
+
+  # 13. Report Error Function
+  ReportErrorFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: report_error.lambda_handler
+      Runtime: python3.12
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref OkeeReportsTable
+      Events:
+        ReportRoute:
+          Type: Api
+          Properties:
+            RestApiId: !Ref OkeeApi
+            Path: /report
+            Method: POST
+
+  # 14. Campsite Management Function
+  CampsiteFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: campsite.lambda_handler
+      Runtime: python3.9
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserDataTable
+      Events:
+        CampsiteApi:
+          Type: Api
+          Properties:
+            Path: /campsite
+            Method: post

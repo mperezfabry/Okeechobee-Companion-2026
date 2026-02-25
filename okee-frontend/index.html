@@ -11,98 +11,130 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="app.js" defer></script>
     
-<style>
-        body { 
-            margin: 0; padding: 0; display: flex; flex-direction: column; 
-            height: 100vh; width: 100vw; overflow: hidden; 
-            font-family: Arial, sans-serif; background: #111; 
-        }
-
+    <style>
+        .sm-btn { cursor: pointer; border: none; padding: 5px 10px; border-radius: 4px; color: white; font-weight: bold; }
+        body { margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; width: 100vw; overflow: hidden; font-family: Arial, sans-serif; background: #111; color: white; }
         #map-wrapper { flex-grow: 1; position: relative; width: 100%; height: calc(100vh - 60px); }
         #map { height: 100%; width: 100%; z-index: 1; }
 
-        #sos-btn { 
-            position: absolute; top: 20px; right: 20px; z-index: 1000; 
-            background: #cc0000; color: white; border: none; font-weight: bold; 
-            width: 70px; height: 70px; border-radius: 50%; font-size: 1.2rem; 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5); cursor: pointer; transition: 0.2s;
-        }
+        /* SOS Elements */
+        #sos-btn { position: absolute; top: 20px; right: 20px; z-index: 1000; background: #cc0000; color: white; border: none; font-weight: bold; width: 70px; height: 70px; border-radius: 50%; font-size: 1.2rem; box-shadow: 0 4px 10px rgba(0,0,0,0.5); cursor: pointer; transition: 0.2s; }
         #sos-btn.active { background: #ff0000; box-shadow: 0 0 15px #ff0000; animation: pulse 1s infinite; }
         
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
+        #sos-alert-banner { position: absolute; top: 0; left: 0; width: 100%; background: #ff0000; color: white; text-align: center; padding: 15px; font-weight: bold; z-index: 2500; display: none; box-sizing: border-box; }
 
-        #bottom-nav {
-            height: 60px; background: #222; display: flex; justify-content: space-around; 
-            align-items: center; border-top: 1px solid #444; z-index: 2000;
-        }
-        .nav-btn { 
-            background: none; border: none; color: #888; font-size: 1.5rem; 
-            cursor: pointer; padding: 10px; transition: color 0.2s; 
-        }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+
+        /* Navigation & Panels */
+        #bottom-nav { height: 60px; background: #222; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #444; z-index: 2000; }
+        .nav-btn { background: none; border: none; color: #888; font-size: 1.5rem; cursor: pointer; padding: 10px; transition: color 0.2s; }
         .nav-btn:active, .nav-btn.active { color: #1DB954; }
 
-        /* Generic Slide Panel */
-        .slide-panel {
-            position: absolute; bottom: 0; left: 0; width: 100%; height: 60vh; 
-            background: #333; color: white; padding: 20px; box-sizing: border-box; 
-            transform: translateY(100%); transition: transform 0.3s ease-in-out; 
-            z-index: 1500; border-top-left-radius: 15px; border-top-right-radius: 15px;
-            box-shadow: 0 -4px 10px rgba(0,0,0,0.5); overflow-y: auto;
-        }
+        .slide-panel { position: absolute; bottom: 0; left: 0; width: 100%; height: 65vh; background: #333; padding: 20px; box-sizing: border-box; transform: translateY(100%); transition: transform 0.3s ease-in-out; z-index: 1500; border-top-left-radius: 15px; border-top-right-radius: 15px; box-shadow: 0 -4px 10px rgba(0,0,0,0.5); overflow-y: auto; }
         .slide-panel.open { transform: translateY(0); }
         
-        .panel-section { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
-        input[type="text"], select { padding: 10px; border-radius: 4px; border: none; font-size: 1rem; }
-        .action-btn { padding: 10px; border-radius: 4px; border: none; cursor: pointer; font-weight: bold; background: #1DB954; color: white; }
+        .panel-section { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; background: #222; padding: 15px; border-radius: 8px; }
+        h3 { margin-top: 0; border-bottom: 1px solid #555; padding-bottom: 10px; font-size: 1.1rem; }
+        input[type="text"], select { padding: 10px; border-radius: 4px; border: none; font-size: 1rem; width: 100%; box-sizing: border-box; }
+        .action-btn { padding: 10px; border-radius: 4px; border: none; cursor: pointer; font-weight: bold; background: #1DB954; color: white; width: 100%; }
+        
+        /* Modals & Toggles */
+        .modal { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #333; padding: 20px; border-radius: 10px; z-index: 3000; width: 80%; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
+        .modal.open { display: block; }
+        
+        .toggle-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #444; }
+        .toggle-switch { width: 40px; height: 20px; background: #555; border-radius: 20px; position: relative; cursor: pointer; }
+        .toggle-switch.on { background: #1DB954; }
+        .toggle-switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; background: white; border-radius: 50%; transition: 0.2s; }
+        .toggle-switch.on::after { left: 22px; }
     </style>
 </head>
 <body>
+
+    <div id="sos-alert-banner">
+        <i class="fa-solid fa-triangle-exclamation"></i> SOS TRIGGERED BY: <span id="sos-user-name">Friend</span>
+    </div>
 
     <div id="map-wrapper">
         <button id="sos-btn">SOS</button>
         <div id="map"></div>
         
+        <div id="map-action-modal" class="modal">
+            <h3>Add Map Marker</h3>
+            <button class="action-btn" style="margin-bottom: 10px; background: #32cd32;">🏕️ Mark My Campsite</button>
+            <button class="action-btn" style="margin-bottom: 10px; background: #ffaa00;">⚠️ Map Correction (Wrong Info)</button>
+            <button class="action-btn" style="background: #444;" onclick="document.getElementById('map-action-modal').classList.remove('open')">Cancel</button>
+        </div>
+        
         <div id="fest-panel" class="slide-panel">
-            <h3 style="margin-top: 0; border-bottom: 1px solid #555; padding-bottom: 10px;">Festival Info</h3>
-            <p>Schedule and stage details will go here.</p>
+            <h3>Festival Lineup</h3>
+            <div class="panel-section">
+                <label>Filter by Stage</label>
+                <select><option>All Stages</option><option>Beings</option><option>Here</option></select>
+            </div>
+            <div id="artist-list" class="panel-section" style="background: transparent; padding: 0;">
+                <div style="padding: 10px; background: #222; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+                    <div><strong>Artist Name</strong><br><small>8:00 PM - Beings Stage</small></div>
+                    <button style="background: #1DB954; color: white; border: none; padding: 8px; border-radius: 50%;"><i class="fa-solid fa-play"></i></button>
+                </div>
+            </div>
+            <div id="spotify-player" style="height: 80px; background: #000; border-radius: 8px; margin-top: 10px; text-align: center; line-height: 80px; color: #888;">Spotify Player Engine</div>
         </div>
 
         <div id="friends-panel" class="slide-panel">
-            <h3 style="margin-top: 0; border-bottom: 1px solid #555; padding-bottom: 10px;">Friends</h3>
+            <h3>Crew & Connections</h3>
+            
             <div class="panel-section">
-                <label>Add Friend by Username</label>
-                <input type="text" id="friend-input" placeholder="Enter username" />
-                <button class="action-btn" id="add-friend-btn">Send Request</button>
-            </div>
-            <div id="friends-list">
+                <h4 style="margin: 0 0 10px 0; color: #ffaa00;">Friend Requests</h4>
+                <div id="pending-requests-list">
+                    <p id="no-requests" style="font-size: 0.8rem; color: #888;">No pending requests.</p>
                 </div>
+            </div>
+
+            <div class="panel-section">
+                <label>Add to Crew</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="friend-input" placeholder="Username" />
+                    <button class="action-btn" id="add-friend-btn" style="width: auto;">Send</button>
+                </div>
+            </div>
+            
+            <div class="panel-section">
+                <h4 style="margin: 0 0 10px 0;">My Crew</h4>
+                <div id="friends-list-container">
+                    </div>
+            </div>
         </div>
 
         <div id="settings-panel" class="slide-panel">
-            <h3 style="margin-top: 0; border-bottom: 1px solid #555; padding-bottom: 10px;">Settings</h3>
+            <h3>Settings</h3>
+            <div class="panel-section">
+                <h4 style="margin: 0 0 10px 0;">Account (Cognito)</h4>
+                <p style="font-size: 0.9rem; color: #aaa; margin-top: 0;">Sign in to save your crew and campsite.</p>
+                <button id="google-login-btn" class="action-btn" style="background: #4285F4; margin-bottom: 10px;"><i class="fa-brands fa-google"></i> Sign in with Google</button>
+                <button id="email-login-btn" class="action-btn" style="background: #333; border: 1px solid #555;">Use Email / Password</button>
+            </div>
             
             <div class="panel-section">
-                <label>SOS Broadcast Range</label>
-                <select id="sos-target">
-                    <option value="everyone">Everyone Nearby</option>
-                    <option value="friends">Friends Only</option>
-                </select>
+                <label style="color: #ffaa00;">Dev Login (Temporary)</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="user-id-input" placeholder="Username (e.g. Marno)" />
+                    <button id="auth-btn" class="action-btn" style="width: auto;">Set User</button>
+                </div>
             </div>
-
+            
             <div class="panel-section">
-                <label>Account ID (Dev Placeholder)</label>
-                <input type="text" id="user-id-input" placeholder="Username (e.g. Marno)" />
-                <button id="auth-btn" class="action-btn">Connect Spotify</button>
+                <label>SOS Broadcast Default</label>
+                <select id="sos-target">
+                    <option value="friends">Friends Only</option>
+                    <option value="everyone">Everyone Nearby</option>
+                </select>
             </div>
         </div>
     </div>
 
     <div id="bottom-nav">
-        <button class="nav-btn" id="nav-fest"><i class="fa-solid fa-flag"></i></button>
+        <button class="nav-btn" id="nav-fest"><i class="fa-solid fa-music"></i></button>
         <button class="nav-btn" id="nav-friends"><i class="fa-solid fa-user-group"></i></button>
         <button class="nav-btn" id="nav-settings"><i class="fa-solid fa-gear"></i></button>
     </div>
