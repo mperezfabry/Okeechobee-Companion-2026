@@ -82,26 +82,50 @@ def resolve_artist(name, token):
     return candidates[0]
 
 
-# --- GET TOP TRACK ---
-def get_top_track(artist_name, token):
-    data = spotify_get(
-        "https://api.spotify.com/v1/search",
-        token,
-        {"q": f"artist:{artist_name}", "type": "track", "limit": 1, "market": "US"}
-    )
+# --- DYNAMODB WIPE ---
+def clear_table():
+    print("Clearing existing ghost data from DynamoDB...")
+    try:
+        keys = [k['AttributeName'] for k in table.key_schema]
+        scan = table.scan(ProjectionExpression=", ".join(keys))
+        
+        with table.batch_writer() as batch:
+            for each in scan.get('Items', []):
+                batch.delete_item(Key=each)
+                
+        while 'LastEvaluatedKey' in scan:
+            scan = table.scan(
+                ProjectionExpression=", ".join(keys),
+                ExclusiveStartKey=scan['LastEvaluatedKey']
+            )
+            with table.batch_writer() as batch:
+                for each in scan.get('Items', []):
+                    batch.delete_item(Key=each)
+        print("Table cleared.\n")
+    except Exception as e:
+        print(f"❌ Error clearing table: {e}")
 
-    if not data:
-        return None
 
-    tracks = data.get("tracks", {}).get("items", [])
-    if not tracks:
-        return None
-
-    return tracks[0]["id"]
+# --- HARDCODED FIXES ---
+MANUAL_FIXES = {
+    "Apache": {"name": "Apashe", "artist_id": "1fd3fmwlhrDl2U5wbbPQYN"},
+    "Aquachobee Dub Reggae": {"name": "Aquachobee Dub Reggae", "artist_id": "5wdQ2IkL8WASlcyt0x2s8Q"},
+    "Cut & Sew": {"name": "Cut & Sew", "artist_id": None},
+    "GRiZ Chasing the Golden Hour": {"name": "GRiZ Chasing the Golden Hour", "artist_id": "25oLRSUjJk4YHNUsQXk7Ut"},
+    "Ian": {"name": "Ian", "artist_id": "23hzc59PkIUau13dqXx5Ef"},
+    "Lightcode by LSDREAM": {"name": "Lightcode by LSDREAM", "artist_id": "0Nfr5f8rhhP04vt0U8kC28"},
+    "Maure": {"name": "Maure", "artist_id": None},
+    "Pirate Wifi": {"name": "Pirate Wifi", "artist_id": None},
+    "POWOW!": {"name": "POWOW!", "artist_id": None},
+    "The Scientist Dubmaster": {"name": "Scientist", "artist_id": "1edl5fzpdS471TaQ8Bgs3w"},
+    "Truth": {"name": "Truth", "artist_id": "0ZDCCJSvjcdJZH9hOl1uYc"}
+}
 
 
 # --- MAIN ---
 def seed():
+    clear_table()
+
     client_id, client_secret = get_secrets()
     token = get_token(client_id, client_secret)
 
@@ -120,36 +144,52 @@ def seed():
     print(f"Found {len(artists)} artists. Seeding...\n")
 
     with table.batch_writer() as batch:
-        for idx, artist_name in enumerate(artists, start=1):
+        for idx, raw_artist_name in enumerate(artists, start=1):
 
-            print(f"Resolving: {artist_name}")
+            print(f"Resolving: {raw_artist_name}")
 
+            # Check manual fixes first
+            if raw_artist_name in MANUAL_FIXES:
+                fix = MANUAL_FIXES[raw_artist_name]
+                print(f"  ✔ Using manual fix for: {fix['name']}")
+                
+                artist_id = fix["artist_id"]
+                uri = f"spotify:artist:{artist_id}" if artist_id else "TBD"
+
+                item = {
+                    "ArtistId": str(idx),
+                    "Name": fix["name"],
+                    "Stage": "TBD",
+                    "Time": "TBD",
+                    "SpotifyURI": uri
+                }
+                
+                batch.put_item(Item=item)
+                print(f"  🎵 Stored hardcoded URI: {uri}")
+                continue
+
+            # Default API flow
             try:
-                artist = resolve_artist(artist_name, token)
+                artist = resolve_artist(raw_artist_name, token)
 
                 if not artist:
                     print("  ❌ No artist found.")
                     continue
 
                 artist_id = artist["id"]
-                print(f"  ✔ Matched: {artist['name']} (popularity {artist.get('popularity', 0)})")
-
-                track_id = get_top_track(artist_name, token)
-
-                if not track_id:
-                    print("  ❌ No top track found.")
-                    continue
+                artist_name = artist["name"]
+                print(f"  ✔ Matched: {artist_name} (popularity {artist.get('popularity', 0)})")
 
                 item = {
                     "ArtistId": str(idx),
                     "Name": artist_name,
                     "Stage": "TBD",
                     "Time": "TBD",
-                    "SpotifyURI": f"spotify:track:{track_id}"
+                    "SpotifyURI": f"spotify:artist:{artist_id}"
                 }
 
                 batch.put_item(Item=item)
-                print(f"  🎵 Stored track: {track_id}")
+                print(f"  🎵 Stored artist URI: spotify:artist:{artist_id}")
 
                 time.sleep(0.2)
 

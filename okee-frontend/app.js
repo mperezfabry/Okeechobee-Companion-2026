@@ -5,10 +5,10 @@ const okeeBounds = L.latLngBounds([27.3526, -80.7499], [27.3684, -80.7238]);
 
 const map = L.map('map', {
     center: [27.3598, -80.7335], 
-    zoom: 15,
-    minZoom: 14,
-    // maxBounds: okeeBounds.pad(0.2),
-    // maxBoundsViscosity: 1.0
+    zoom: 15.5,
+    minZoom: 15,
+    maxBounds: okeeBounds.pad(0.2),
+    maxBoundsViscosity: 0.9
 });
 
 let clickedCoords = null;
@@ -25,10 +25,13 @@ map.on('click', () => {
     document.getElementById('map-action-modal').classList.remove('open');
 });
 
-L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}').addTo(map);
+// Bring the terrain back, but restrict downloads to the immediate festival area
+L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    bounds: okeeBounds.pad(0.1) 
+}).addTo(map);
 
 const mainBounds = [[27.35359, -80.74947], [27.36807, -80.72441]];
-L.imageOverlay('okee-map.jpg', mainBounds, { opacity: 0.4 }).addTo(map);
+L.imageOverlay('okee-map.jpg', mainBounds, { opacity: 1.0 }).addTo(map);
 
 // --- LOCATION TRACKER ---
 let trackingId = null;
@@ -45,12 +48,8 @@ function startLocationTracking(userId) {
             
             console.log(`GPS Ping: ${lat}, ${lon}`); 
             
-            if (!userMarker) {
-                userMarker = L.marker([lat, lon]).addTo(map).bindPopup("<b>You are here</b>");
-                map.flyTo([lat, lon], 16); 
-            } else {
-                userMarker.setLatLng([lat, lon]);
-            }
+            // Pass the physical ping to the universal handler
+            handleLocationUpdate(lat, lon);
 
             try {
                 // 1. Send your location to AWS
@@ -244,7 +243,7 @@ async function fetchAndDrawMapData(userId) {
     try {
         const response = await fetch(`${API_BASE_URL}/map?user_id=${encodeURIComponent(userId)}`);
         const data = await response.json();
-        
+        renderVenueFriends(data.friends || []); // Update venue friend dots if on venue map
         if (data.error) {
             console.error("Backend returned an error:", data.error);
             return;
@@ -360,19 +359,15 @@ function renderLineupUI(lineup) {
     });
 }
 
-function playPreview(spotifyURI) {
-    // 1. Extract the ID from the URI
-    const trackId = spotifyURI.split(':').pop();
+function playPreview(artistId) {
+    if (!artistId) return;
+    // We use the /artist/ endpoint to get the multi-song playbox
+    const embedUrl = `https://open.spotify.com/embed/artist/${artistId.split(':').pop()}?utm_source=generator&theme=0`;
     
-    // 2. Break up the official embed URL so the chat filter doesn't mangle it
-    const baseUrl = "https://open." + "spotify.com" + "/embed/track/";
-    const embedUrl = baseUrl + trackId + "?utm_source=generator&theme=0";
-    
-    // 3. Inject the iframe
     document.getElementById('spotify-player').innerHTML = `
         <iframe style="border-radius:12px" 
         src="${embedUrl}" 
-        width="100%" height="80" frameborder="0" 
+        width="100%" height="352" frameborder="0" 
         allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>`;
 }
 
@@ -548,3 +543,262 @@ document.querySelector('button[style*="background: #ffaa00"]').onclick = async (
 
     document.getElementById('map-action-modal').classList.remove('open');
 };
+
+// --- SCENE TOGGLE & DEV MODE ---
+const btnCamping = document.getElementById('btn-camping');
+const btnVenue = document.getElementById('btn-venue');
+const mapDiv = document.getElementById('map');
+const venueMapContainer = document.getElementById('venue-map-container');
+const devPanel = document.getElementById('dev-calibration-panel');
+
+let currentScene = 'camping';
+
+btnCamping.addEventListener('click', () => {
+    currentScene = 'camping';
+    btnCamping.style.background = '#1DB954'; btnCamping.style.color = 'black';
+    btnVenue.style.background = 'transparent'; btnVenue.style.color = 'white';
+    mapDiv.style.display = 'block';
+    venueMapContainer.style.display = 'none';
+    
+    // Only fly to location on scene switch if inside the bounds
+    if (userMarker && currentSimLat && okeeBounds.contains([currentSimLat, currentSimLon])) {
+        map.flyTo([currentSimLat, currentSimLon], 16);
+    }
+});
+
+btnVenue.addEventListener('click', () => {
+    currentScene = 'venue';
+    btnVenue.style.background = '#1DB954'; btnVenue.style.color = 'black';
+    btnCamping.style.background = 'transparent'; btnCamping.style.color = 'white';
+    mapDiv.style.display = 'none';
+    venueMapContainer.style.display = 'block';
+    updateVenueUserDot(); 
+});
+
+// Triple-click SOS to show/hide the Dev panel
+let devTapCount = 0;
+document.getElementById('sos-btn').addEventListener('click', () => {
+    devTapCount++;
+    setTimeout(() => { devTapCount = 0; }, 1000);
+    if (devTapCount >= 3) {
+        devPanel.style.display = devPanel.style.display === 'none' ? 'block' : 'none';
+        devTapCount = 0;
+    }
+});
+
+// --- VENUE MAP PAN ENGINE ---
+const venueImgWrapper = document.getElementById('venue-img-wrapper');
+let isDraggingVenue = false;
+let startX, startY, initialLeft = 0, initialTop = 0;
+let currentLeft = 0, currentTop = 0;
+let venueScale = 0.8; // Default zoom out
+
+// Centralized function to handle both panning and zooming
+function applyVenueTransform() {
+    venueImgWrapper.style.transform = `translate(${currentLeft}px, ${currentTop}px) scale(${venueScale})`;
+}
+
+function startDrag(clientX, clientY) {
+    if (activeAnchor) return; // Don't drag if we are trying to set a pin
+    isDraggingVenue = true;
+    startX = clientX; 
+    startY = clientY;
+    currentLeft = initialLeft;
+    currentTop = initialTop;
+}
+
+function moveDrag(clientX, clientY) {
+    if (!isDraggingVenue) return;
+    
+    // Calculate new position based on drag delta
+    currentLeft = initialLeft + (clientX - startX);
+    currentTop = initialTop + (clientY - startY);
+    
+    applyVenueTransform();
+}
+
+function endDrag(clientX, clientY) {
+    if (isDraggingVenue) {
+        initialLeft += clientX - startX;
+        initialTop += clientY - startY;
+        currentLeft = initialLeft;
+        currentTop = initialTop;
+        isDraggingVenue = false;
+    }
+}
+
+// Mouse wheel zoom
+venueMapContainer.addEventListener('wheel', (e) => {
+    e.preventDefault(); // Stop page scrolling
+    const zoomSpeed = 0.05;
+    
+    if (e.deltaY < 0) {
+        venueScale += zoomSpeed; // Scroll up = zoom in
+    } else {
+        venueScale = Math.max(0.3, venueScale - zoomSpeed); // Scroll down = zoom out (cap at 0.3)
+    }
+    
+    applyVenueTransform();
+}, { passive: false });
+
+// Mouse support
+venueMapContainer.addEventListener('mousedown', (e) => {
+    e.preventDefault(); // Kills native image dragging and text highlighting
+    startDrag(e.clientX, e.clientY);
+});
+window.addEventListener('mousemove', (e) => moveDrag(e.clientX, e.clientY));
+window.addEventListener('mouseup', (e) => endDrag(e.clientX, e.clientY));
+
+// Touch support
+venueMapContainer.addEventListener('touchstart', (e) => startDrag(e.touches[0].clientX, e.touches[0].clientY));
+window.addEventListener('touchmove', (e) => moveDrag(e.touches[0].clientX, e.touches[0].clientY));
+window.addEventListener('touchend', (e) => endDrag(e.changedTouches[0].clientX, e.changedTouches[0].clientY));
+
+
+// --- CALIBRATION LOGIC (Affine Transform) ---
+let anchors = JSON.parse(localStorage.getItem('okee_anchors')) || [];
+let activeAnchor = null; 
+let currentSimLat = null;
+let currentSimLon = null;
+
+// Handle both real GPS and simulated GPS inputs
+function handleLocationUpdate(lat, lon) {
+    currentSimLat = lat; currentSimLon = lon;
+    
+    // 1. Update Leaflet
+    if (!userMarker) {
+        userMarker = L.marker([lat, lon]).addTo(map).bindPopup("<b>You are here</b>");
+        // Only center the map if the user is actually at the festival
+        if (okeeBounds.contains([lat, lon])) {
+            map.flyTo([lat, lon], 16);
+        }
+    } else {
+        userMarker.setLatLng([lat, lon]);
+    }
+    // 2. Update Custom Venue Image
+    if (currentScene === 'venue') updateVenueUserDot();
+}
+
+// Simulated GPS ping for living room testing
+document.getElementById('dev-set-gps').addEventListener('click', () => {
+    const simLat = parseFloat(document.getElementById('dev-lat').value);
+    const simLon = parseFloat(document.getElementById('dev-lon').value);
+    handleLocationUpdate(simLat, simLon);
+});
+
+function setupAnchor(num) {
+    if (!currentSimLat) return alert("Simulate a GPS ping first!");
+    activeAnchor = num;
+    document.getElementById('cal-status').innerText = `Tap image to place Anchor ${num}`;
+}
+document.getElementById('set-anchor-1').addEventListener('click', () => setupAnchor(1));
+document.getElementById('set-anchor-2').addEventListener('click', () => setupAnchor(2));
+document.getElementById('set-anchor-3').addEventListener('click', () => setupAnchor(3));
+
+venueImgWrapper.addEventListener('click', (e) => {
+    if (!activeAnchor) return;
+    
+    const rect = venueImgWrapper.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    anchors[activeAnchor - 1] = { lat: currentSimLat, lon: currentSimLon, x: x, y: y };
+    localStorage.setItem('okee_anchors', JSON.stringify(anchors));
+    
+    document.getElementById(`set-anchor-${activeAnchor}`).style.background = '#1DB954';
+    document.getElementById('cal-status').innerText = `Anchor ${activeAnchor} saved!`;
+    activeAnchor = null;
+    updateVenueUserDot();
+});
+
+document.getElementById('clear-anchors').addEventListener('click', () => {
+    anchors = [];
+    localStorage.removeItem('okee_anchors');
+    document.getElementById('cal-status').innerText = 'Anchors cleared.';
+    [1, 2, 3].forEach(i => document.getElementById(`set-anchor-${i}`).style.background = '#444');
+    document.getElementById('user-dot-venue').style.display = 'none';
+});
+
+// Exact Math Engine: Converts Lat/Lon to Image Pixels using Barycentric Coordinates
+function gpsToPixels(lat, lon) {
+    if (anchors.length < 3 || !anchors[0] || !anchors[1] || !anchors[2]) return null;
+    
+    const [A, B, C] = anchors;
+    const detT = (B.lat - C.lat)*(A.lon - C.lon) - (B.lon - C.lon)*(A.lat - C.lat);
+    if (detT === 0) return null; 
+    
+    const wA = ((B.lat - C.lat)*(lon - C.lon) - (B.lon - C.lon)*(lat - C.lat)) / detT;
+    const wB = ((C.lat - A.lat)*(lon - C.lon) - (A.lon - C.lon)*(lat - C.lat)) / detT;
+    const wC = 1 - wA - wB;
+    
+    return {
+        x: wA * A.x + wB * B.x + wC * C.x,
+        y: wA * A.y + wB * B.y + wC * C.y
+    };
+}
+
+function updateVenueUserDot() {
+    if (!currentSimLat || !currentSimLon) return;
+    const pxCoords = gpsToPixels(currentSimLat, currentSimLon);
+    const dot = document.getElementById('user-dot-venue');
+    
+    if (pxCoords) {
+        dot.style.display = 'block';
+        dot.style.left = pxCoords.x + 'px';
+        dot.style.top = pxCoords.y + 'px';
+    }
+}
+
+const venueFriendDots = {};
+
+function renderVenueFriends(friendsList) {
+    // If the map isn't calibrated yet, we can't place them on the distorted image
+    if (anchors.length < 3 || !anchors[0] || !anchors[1] || !anchors[2]) return;
+
+    const container = document.getElementById('venue-friends-container');
+
+    friendsList.forEach(friend => {
+        // Run friend GPS through the affine transformation matrix
+        const pxCoords = gpsToPixels(friend.lat, friend.lon);
+        if (!pxCoords) return;
+
+        let dot = venueFriendDots[friend.user_id]; // Use whatever ID key your DB returns
+        
+        // If the dot doesn't exist yet, create it
+        if (!dot) {
+            dot = document.createElement('div');
+            dot.style.position = 'absolute';
+            dot.style.width = '14px';
+            dot.style.height = '14px';
+            dot.style.background = '#ff00ff'; // Change to match your friend marker logic
+            dot.style.border = '2px solid #fff';
+            dot.style.borderRadius = '50%';
+            dot.style.transform = 'translate(-50%, -50%)';
+            dot.style.zIndex = '9';
+            dot.style.boxShadow = '0 0 8px #ff00ff';
+            
+            // Add a label for their name/ID
+            const label = document.createElement('span');
+            label.innerText = friend.name || friend.user_id.substring(0, 3);
+            label.style.position = 'absolute';
+            label.style.top = '-16px';
+            label.style.left = '50%';
+            label.style.transform = 'translateX(-50%)';
+            label.style.color = '#fff';
+            label.style.fontSize = '10px';
+            label.style.fontWeight = 'bold';
+            label.style.textShadow = '1px 1px 2px #000';
+            dot.appendChild(label);
+
+            container.appendChild(dot);
+            venueFriendDots[friend.user_id] = dot;
+        }
+        
+        // Update their position on the map
+        dot.style.left = pxCoords.x + 'px';
+        dot.style.top = pxCoords.y + 'px';
+    });
+}
+
+// Check initial UI state on load
+anchors.forEach((a, i) => { if (a) document.getElementById(`set-anchor-${i+1}`).style.background = '#1DB954'; });
