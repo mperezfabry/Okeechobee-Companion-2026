@@ -1,0 +1,171 @@
+[
+  { "day": "Thursday", "stage": "Aquachobee", "artist": "Orlas", "start": "12:30 PM", "end": "2:00 PM" },
+  { "day": "Thursday", "stage": "Aquachobee", "artist": "Papa Michigan", "start": "2:00 PM", "end": "2:45 PM" },
+  { "day": "Thursday", "stage": "Aquachobee", "artist": "Sister Nancy", "start": "2:45 PM", "end": "3:30 PM" },
+  { "day": "Thursday", "stage": "Aquachobee", "artist": "Mykal Rose", "start": "3:30 PM", "end": "6:00 PM" },
+  { "day": "Thursday", "stage": "Aquachobee", "artist": "Opening Ceremony", "start": "6:00 PM", "end": "6:45 PM" },
+
+  { "day": "Thursday", "stage": "BE Stage", "artist": "The Free Label", "start": "3:00 PM", "end": "4:00 PM" },
+  { "day": "Thursday", "stage": "BE Stage", "artist": "Big Wild", "start": "5:00 PM", "end": "6:00 PM" },
+  { "day": "Thursday", "stage": "BE Stage", "artist": "Dirty Heads", "start": "6:45 PM", "end": "7:45 PM" },
+  { "day": "Thursday", "stage": "BE Stage", "artist": "Blaap", "start": "8:30 PM", "end": "9:30 PM" },
+  { "day": "Thursday", "stage": "BE Stage", "artist": "Cage the Elephant", "start": "10:30 PM", "end": "12:00 AM" },
+  { "day": "Thursday", "stage": "BE Stage", "artist": "Knock2", "start": "1:00 AM", "end": "2:00 AM" },
+
+  { "day": "Thursday", "stage": "Incendia", "artist": "Sunken Frequencies", "start": "9:00 PM", "end": "10:00 PM" },
+  { "day": "Thursday", "stage": "Incendia", "artist": "DiCE MaN", "start": "10:00 PM", "end": "11:00 PM" },
+  { "day": "Thursday", "stage": "Incendia", "artist": "Rafeeki", "start": "11:00 PM", "end": "12:00 AM" },
+  { "day": "Thursday", "stage": "Incendia", "artist": "AK Sports", "start": "12:00 AM", "end": "1:00 AM" },
+  { "day": "Thursday", "stage": "Incendia", "artist": "Hypho", "start": "1:00 AM", "end": "2:00 AM" },
+  { "day": "Thursday", "stage": "Incendia", "artist": "??????", "start": "2:00 AM", "end": "3:00 AM" },
+
+  { "day": "Thursday", "stage": "Jungle 51", "artist": "Nightmares on Wax", "start": "7:00 PM", "end": "11:00 PM" },
+  { "day": "Thursday", "stage": "Jungle 51", "artist": "Mathew Jonson", "start": "11:00 PM", "end": "4:00 AM" },
+  { "day": "Thursday", "stage": "Jungle 51", "artist": "Riva Starr", "start": "4:00 AM", "end": "8:00 AM" },
+
+  { "day": "Thursday", "stage": "NOW Stage", "artist": "Saxsquatch", "start": "4:00 PM", "end": "5:00 PM" },
+  { "day": "Thursday", "stage": "NOW Stage", "artist": "Ahee", "start": "5:45 PM", "end": "6:45 PM" },
+  { "day": "Thursday", "stage": "NOW Stage", "artist": "Level Up", "start": "7:30 PM", "end": "8:30 PM" },
+  { "day": "Thursday", "stage": "NOW Stage", "artist": "The Disco Biscuits", "start": "9:30 PM", "end": "10:30 AM" },
+  { "day": "Thursday", "stage": "NOW Stage", "artist": "Ganja White Night", "start": "12:00 AM", "end": "1:00 AM" },
+
+  { "day": "Thursday", "stage": "The T Lounge", "artist": "Narf", "start": "2:00 PM", "end": "3:30 PM" },
+  { "day": "Thursday", "stage": "The T Lounge", "artist": "Bastianse", "start": "3:30 PM", "end": "5:00 PM" },
+  { "day": "Thursday", "stage": "The T Lounge", "artist": "Leo Del Toro", "start": "5:00 PM", "end": "6:30 PM" },
+  { "day": "Thursday", "stage": "The T Lounge", "artist": "Life on Planets", "start": "6:30 PM", "end": "8:00 PM" },
+  { "day": "Thursday", "stage": "The T Lounge", "artist": "The All You Can Eat Orchestra", "start": "12:00 AM", "end": "3:00 AM" },
+  { "day": "Thursday", "stage": "The T Lounge", "artist": "Mathew Jonson", "start": "1:00 AM", "end": "3:30 AM" },
+
+
+
+  { "day": "Friday", "stage": "Aquachobee", "artist": "Apashe", "start": "12:00 PM", "end": "2:00 PM" },
+  { "day": "Friday", "stage": "Aquachobee", "artist": "David Block", "start": "2:00 PM", "end": "4:00 PM" },
+  { "day": "Friday", "stage": "Aquachobee", "artist": "Covex", "start": "4:00 PM", "end": "5:30 PM" },
+  { "day": "Friday", "stage": "Aquachobee", "artist": "Lizzy Jane", "start": "5:30 PM", "end": "6:45 PM" },
+  { "day": "Friday", "stage": "Aquachobee", "artist": "Pretty Pink", "start": "6:45 PM", "end": "8:00 PM" },
+
+  { "day": "Friday", "stage": "BE Stage", "artist": "Empress Of", "start": "2:45 PM", "end": "3:30 PM" },
+  { "day": "Friday", "stage": "BE Stage", "artist": "Freddie Gibbs", "start": "4:30 PM", "end": "5:15 PM" },
+  { "day": "Friday", "stage": "BE Stage", "artist": "Japanese Breakfast", "start": "6:00 PM", "end": "7:00 PM" },
+  { "day": "Friday", "stage": "BE Stage", "artist": "Rainbow Kitten Surprise", "start": "8:00 PM", "end": "9:00 PM" },
+  { "day": "Friday", "stage": "BE Stage", "artist": "T-Pain", "start": "10:00 PM", "end": "11:00 PM" },
+  { "day": "Friday", "stage": "BE Stage", "artist": "GRiZ", "start": "12:05 AM", "end": "1:35 AM" },
+
+  { "day": "Friday", "stage": "HERE Stage", "artist": "The Floridians", "start": "3:00 PM", "end": "4:00 PM" },
+  { "day": "Friday", "stage": "HERE Stage", "artist": "Trousdale", "start": "4:30 PM", "end": "5:30 PM" },
+  { "day": "Friday", "stage": "HERE Stage", "artist": "Probcause", "start": "6:00 PM", "end": "7:00 PM" },
+  { "day": "Friday", "stage": "HERE Stage", "artist": "TVBoo", "start": "7:30 PM", "end": "8:30 PM" },
+  { "day": "Friday", "stage": "HERE Stage", "artist": "Ravenscoon", "start": "9:00 PM", "end": "10:00 PM" },
+  { "day": "Friday", "stage": "HERE Stage", "artist": "Tractorbeam", "start": "1:00 AM", "end": "2:00 AM" },
+
+  { "day": "Friday", "stage": "Incendia", "artist": "Bekim", "start": "9:00 PM", "end": "10:00 PM" },
+  { "day": "Friday", "stage": "Incendia", "artist": "DazegXD", "start": "10:00 PM", "end": "11:00 AM" },
+  { "day": "Friday", "stage": "Incendia", "artist": "Flava D", "start": "12:00 AM", "end": "1:00 AM" },
+  { "day": "Friday", "stage": "Incendia", "artist": "Conducta", "start": "1:00 AM", "end": "2:00 AM" },
+  { "day": "Friday", "stage": "Incendia", "artist": "??????", "start": "2:00 AM", "end": "3:00 AM" },
+
+  { "day": "Friday", "stage": "Jungle 51", "artist": "Bergsonist", "start": "7:00 PM", "end": "11:00 PM" },
+  { "day": "Friday", "stage": "Jungle 51", "artist": "Tamix", "start": "11:00 PM", "end": "12:00 AM" },
+  { "day": "Friday", "stage": "Jungle 51", "artist": "Special Request", "start": "12:00 AM", "end": "4:00 AM" },
+  { "day": "Friday", "stage": "Jungle 51", "artist": "Rechulski", "start": "4:00 AM", "end": "8:00 AM" },
+
+  { "day": "Friday", "stage": "NOW Stage", "artist": "DLG.", "start": "2:00 PM", "end": "2:45 PM" },
+  { "day": "Friday", "stage": "NOW Stage", "artist": "Denm", "start": "3:30 PM", "end": "4:30 PM" },
+  { "day": "Friday", "stage": "NOW Stage", "artist": "Whethan", "start": "5:10 PM", "end": "6:10 PM" },
+  { "day": "Friday", "stage": "NOW Stage", "artist": "LP Giobbi", "start": "7:00 PM", "end": "8:00 PM" },
+  { "day": "Friday", "stage": "NOW Stage", "artist": "Gramatik", "start": "9:00 PM", "end": "10:00 PM" },
+  { "day": "Friday", "stage": "NOW Stage", "artist": "Alison Wonderland", "start": "11:00 PM", "end": "12:00 AM" },
+
+  { "day": "Friday", "stage": "The T Lounge", "artist": "Discolypso Crew", "start": "2:00 PM", "end": "3:00 PM" },
+  { "day": "Friday", "stage": "The T Lounge", "artist": "Eric Duncan", "start": "3:00 PM", "end": "5:00 PM" },
+  { "day": "Friday", "stage": "The T Lounge", "artist": "Isaac Ferry", "start": "5:00 PM", "end": "6:30 PM" },
+  { "day": "Friday", "stage": "The T Lounge", "artist": "Rigopolar", "start": "6:30 PM", "end": "8:00 PM" },
+
+
+  { "day": "Saturday", "stage": "Aquachobee", "artist": "Julia.", "start": "12:00 PM", "end": "1:00 PM" },
+  { "day": "Saturday", "stage": "Aquachobee", "artist": "Hue Hinton", "start": "1:30 PM", "end": "2:30 PM" },
+  { "day": "Saturday", "stage": "Aquachobee", "artist": "Artifakts", "start": "3:00 PM", "end": "4:00 PM" },
+  { "day": "Saturday", "stage": "Aquachobee", "artist": "Koastle", "start": "4:30 PM", "end": "5:30 PM" },
+  { "day": "Saturday", "stage": "Aquachobee", "artist": "Effin", "start": "5:45 PM", "end": "6:45 PM" },
+  { "day": "Saturday", "stage": "Aquachobee", "artist": "Jantsen", "start": "7:00 PM", "end": "8:00 PM" },
+
+  { "day": "Saturday", "stage": "BE Stage", "artist": "Marlon Funaki", "start": "3:00 PM", "end": "4:00 PM" },
+  { "day": "Saturday", "stage": "BE Stage", "artist": "Goth Babe", "start": "5:00 PM", "end": "6:00 PM" },
+  { "day": "Saturday", "stage": "BE Stage", "artist": "GRiZ:Chasing the Golden Hour", "start": "6:30 PM", "end": "7:45 PM" },
+  { "day": "Saturday", "stage": "BE Stage", "artist": "BigXthaPlug", "start": "8:15 PM", "end": "9:00 PM" },
+  { "day": "Saturday", "stage": "BE Stage", "artist": "LCD Soundsystem", "start": "9:30 PM", "end": "11:00 PM" },
+  { "day": "Saturday", "stage": "BE Stage", "artist": "Fisher", "start": "12:00 AM", "end": "1:30 AM" },
+
+  { "day": "Saturday", "stage": "HERE Stage", "artist": "Squeaky Feet", "start": "3:00 PM", "end": "4:00 PM" },
+  { "day": "Saturday", "stage": "HERE Stage", "artist": "Polyrhythmics", "start": "4:30 PM", "end": "5:30 PM" },
+  { "day": "Saturday", "stage": "HERE Stage", "artist": "The Ries Brothers", "start": "6:00 PM", "end": "7:15 PM" },
+  { "day": "Saturday", "stage": "HERE Stage", "artist": "Eggy", "start": "7:45 PM", "end": "9:15 PM" },
+  { "day": "Saturday", "stage": "HERE Stage", "artist": "Dogs in a Pile", "start": "9:45 PM", "end": "11:45 PM" },
+  { "day": "Saturday", "stage": "HERE Stage", "artist": "Tycho", "start": "12:20 AM", "end": "2:00 AM" },
+
+  { "day": "Saturday", "stage": "Incendia", "artist": "La Combi", "start": "9:00 PM", "end": "10:00 PM" },
+  { "day": "Saturday", "stage": "Incendia", "artist": "Davy Wreck", "start": "10:00 PM", "end": "11:00 PM" },
+  { "day": "Saturday", "stage": "Incendia", "artist": "Onhell", "start": "11:00 PM", "end": "12:00 AM" },
+  { "day": "Saturday", "stage": "Incendia", "artist": "Resonant Language", "start": "12:00 AM", "end": "1:00 AM" },
+  { "day": "Saturday", "stage": "Incendia", "artist": "Eprom", "start": "1:00 AM", "end": "2:00 AM" },
+  { "day": "Saturday", "stage": "Incendia", "artist": "??????", "start": "2:00 AM", "end": "3:00 AM" },
+
+  { "day": "Saturday", "stage": "Jungle 51", "artist": "TV Hill", "start": "7:00 PM", "end": "11:00 PM" },
+  { "day": "Saturday", "stage": "Jungle 51", "artist": "The Josh Craig", "start": "11:00 PM", "end": "12:00 AM" },
+  { "day": "Saturday", "stage": "Jungle 51", "artist": "Black Rave Culture", "start": "12:00 AM", "end": "8:00 AM" },
+
+  { "day": "Saturday", "stage": "NOW Stage", "artist": "Snacktime", "start": "2:00 PM", "end": "3:00 PM" },
+  { "day": "Saturday", "stage": "NOW Stage", "artist": "Paris Texas", "start": "4:00 PM", "end": "5:00 PM" },
+  { "day": "Saturday", "stage": "NOW Stage", "artist": "Ian", "start": "5:45 PM", "end": "6:45 PM" },
+  { "day": "Saturday", "stage": "NOW Stage", "artist": "Powow!", "start": "8:00 PM", "end": "9:15 PM" },
+  { "day": "Saturday", "stage": "NOW Stage", "artist": "Big Gigantic", "start": "11:00 PM", "end": "12:00 AM" },
+
+  { "day": "Saturday", "stage": "The T Lounge", "artist": "Tony Disco", "start": "2:00 PM", "end": "4:00 PM" },
+  { "day": "Saturday", "stage": "The T Lounge", "artist": "Kenia", "start": "4:00 PM", "end": "6:00 PM" },
+  { "day": "Saturday", "stage": "The T Lounge", "artist": "Gaspar Muniz", "start": "6:00 PM", "end": "8:00 PM" },
+  { "day": "Saturday", "stage": "The T Lounge", "artist": "The All You Can Eat Orchestra", "start": "12:00 AM", "end": "3:00 AM" },
+
+
+  { "day": "Sunday", "stage": "Aquachobee", "artist": "Lumia", "start": "1:30 PM", "end": "2:30 PM" },
+  { "day": "Sunday", "stage": "Aquachobee", "artist": "Capochino", "start": "2:40 PM", "end": "3:40 PM" },
+  { "day": "Sunday", "stage": "Aquachobee", "artist": "Steller", "start": "3:50 PM", "end": "4:50 PM" },
+  { "day": "Sunday", "stage": "Aquachobee", "artist": "Smoakland", "start": "5:00 PM", "end": "6:00 PM" },
+  { "day": "Sunday", "stage": "Aquachobee", "artist": "Mary Droppinz", "start": "6:10 PM", "end": "7:10 PM" },
+  { "day": "Sunday", "stage": "Aquachobee", "artist": "Truth", "start": "7:15 PM", "end": "8:15 PM" },
+
+  { "day": "Sunday", "stage": "BE Stage", "artist": "Rebirth Brass Band", "start": "2:45 PM", "end": "3:30 PM" },
+  { "day": "Sunday", "stage": "BE Stage", "artist": "The Movement", "start": "4:15 PM", "end": "5:00 PM" },
+  { "day": "Sunday", "stage": "BE Stage", "artist": "Big Boi (Outkast)", "start": "6:00 PM", "end": "6:45 PM" },
+  { "day": "Sunday", "stage": "BE Stage", "artist": "Young the Giant", "start": "8:00 PM", "end": "9:00 PM" },
+  { "day": "Sunday", "stage": "BE Stage", "artist": "The Lumineers", "start": "9:30 PM", "end": "11:00 PM" },
+
+  { "day": "Sunday", "stage": "HERE Stage", "artist": "Lightcode by LSDREAM", "start": "12:30 PM", "end": "1:30 PM" },
+  { "day": "Sunday", "stage": "HERE Stage", "artist": "Cut & Sew", "start": "2:00 PM", "end": "3:00 PM" },
+  { "day": "Sunday", "stage": "HERE Stage", "artist": "Penelope Road", "start": "3:30 PM", "end": "4:30 PM" },
+  { "day": "Sunday", "stage": "HERE Stage", "artist": "The Stews", "start": "5:00 PM", "end": "6:00 PM" },
+  { "day": "Sunday", "stage": "HERE Stage", "artist": "Know Good", "start": "6:30 PM", "end": "7:30 PM" },
+  { "day": "Sunday", "stage": "HERE Stage", "artist": "Richy Mitch & the Coal Miners", "start": "8:15 PM", "end": "9:15 PM" },
+  { "day": "Sunday", "stage": "HERE Stage", "artist": "Beltran", "start": "10:00 PM", "end": "12:00 AM" },
+
+  { "day": "Sunday", "stage": "Incendia", "artist": "Badger", "start": "9:00 PM", "end": "10:00 PM" },
+  { "day": "Sunday", "stage": "Incendia", "artist": "Hiroko Yamamura", "start": "10:00 PM", "end": "11:00 PM" },
+  { "day": "Sunday", "stage": "Incendia", "artist": "??????", "start": "11:00 PM", "end": "12:00 AM" },
+
+  { "day": "Sunday", "stage": "Jungle 51", "artist": "Moodymann", "start": "7:00 PM", "end": "11:30 PM" },
+  { "day": "Sunday", "stage": "Jungle 51", "artist": "Octave One", "start": "11:30 PM", "end": "1:00 AM" },
+  { "day": "Sunday", "stage": "Jungle 51", "artist": "Derrick May", "start": "1:00 AM", "end": "6:00 AM" },
+
+  { "day": "Sunday", "stage": "NOW Stage", "artist": "Winyah", "start": "2:00 PM", "end": "2:45 PM" },
+  { "day": "Sunday", "stage": "NOW Stage", "artist": "Tropidelic", "start": "3:30 PM", "end": "4:15 PM" },
+  { "day": "Sunday", "stage": "NOW Stage", "artist": "Moon Taxi", "start": "5:00 PM", "end": "6:00 PM" },
+  { "day": "Sunday", "stage": "NOW Stage", "artist": "Flipturn", "start": "6:45 PM", "end": "8:00 PM" },
+  { "day": "Sunday", "stage": "NOW Stage", "artist": "Zingara", "start": "8:30 PM", "end": "9:30 PM" },
+  { "day": "Sunday", "stage": "NOW Stage", "artist": "LSDREAM", "start": "11:00 PM", "end": "12:00 AM" },
+
+  { "day": "Sunday", "stage": "The T Lounge", "artist": "Maure", "start": "2:00 PM", "end": "3:00 PM" },
+  { "day": "Sunday", "stage": "The T Lounge", "artist": "Electric Kif", "start": "3:00 PM", "end": "4:00 PM" },
+  { "day": "Sunday", "stage": "The T Lounge", "artist": "Maure", "start": "4:00 PM", "end": "5:30 PM" },
+  { "day": "Sunday", "stage": "The T Lounge", "artist": "Roy Davis Jr.", "start": "5:30 PM", "end": "7:00 PM" },
+  { "day": "Sunday", "stage": "The T Lounge", "artist": "Gitkin", "start": "7:00 PM", "end": "8:00 PM" },
+  { "day": "Sunday", "stage": "The T Lounge", "artist": "The All You Can Eat Orchestra", "start": "12:00 AM", "end": "3:00 AM" }
+]

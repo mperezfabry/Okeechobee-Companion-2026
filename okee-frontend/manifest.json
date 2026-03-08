@@ -1,0 +1,22 @@
+{
+  "name": "Okee Companion 2026",
+  "short_name": "Okee Tracker",
+  "description": "Lost and Found at Okeechobee Music & Arts Festival",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#111111",
+  "theme_color": "#1DB954",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "okee-map.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    },
+    {
+      "src": "okee-map.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}

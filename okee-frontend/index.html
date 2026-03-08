@@ -3,172 +3,214 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Okee Tracker</title>
+    <title>Okee Tracker 2026</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1DB954">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="app.js" defer></script>
     
     <style>
         .leaflet-container { background: #111 !important; }
-        .sm-btn { cursor: pointer; border: none; padding: 5px 10px; border-radius: 4px; color: white; font-weight: bold; }
+        .sm-btn { cursor: pointer; border: none; padding: 10px 15px; border-radius: 6px; color: white; font-weight: bold; font-size: 1.1rem; min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: center; }
         body { margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; width: 100vw; overflow: hidden; font-family: Arial, sans-serif; background: #111; color: white; }
-        #map-wrapper { flex-grow: 1; position: relative; width: 100%; height: calc(100vh - 60px); }
+        
+        #sync-status-bar { height: 25px; background: #222; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; color: #888; border-bottom: 1px solid #333; gap: 10px; z-index: 3000; }
+
+        #map-wrapper, #venue-map-container { flex-grow: 1; position: relative; width: 100%; height: calc(100vh - 85px); }
         #map { height: 100%; width: 100%; z-index: 1; }
 
-        /* SOS Elements */
-        #sos-btn { position: absolute; top: 20px; right: 20px; z-index: 1000; background: #cc0000; color: white; border: none; font-weight: bold; width: 70px; height: 70px; border-radius: 50%; font-size: 1.2rem; box-shadow: 0 4px 10px rgba(0,0,0,0.5); cursor: pointer; transition: 0.2s; }
+        #sos-btn { position: absolute; top: 60px; right: 20px; z-index: 1000; background: #cc0000; color: white; border: none; font-weight: bold; width: 70px; height: 70px; border-radius: 50%; font-size: 1.2rem; box-shadow: 0 4px 10px rgba(0,0,0,0.5); cursor: pointer; }
         #sos-btn.active { background: #ff0000; box-shadow: 0 0 15px #ff0000; animation: pulse 1s infinite; }
-        
-        #sos-alert-banner { position: absolute; top: 0; left: 0; width: 100%; background: #ff0000; color: white; text-align: center; padding: 15px; font-weight: bold; z-index: 2500; display: none; box-sizing: border-box; }
-
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
 
-        /* Navigation & Panels */
         #bottom-nav { height: 60px; background: #222; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #444; z-index: 2000; }
-        .nav-btn { background: none; border: none; color: #888; font-size: 1.5rem; cursor: pointer; padding: 10px; transition: color 0.2s; }
-        .nav-btn:active, .nav-btn.active { color: #1DB954; }
+        .nav-btn { background: none; border: none; color: #888; font-size: 1.5rem; padding: 10px; cursor: pointer; }
+        .nav-btn.active { color: #1DB954; }
 
-        .slide-panel { position: absolute; bottom: 0; left: 0; width: 100%; height: 65vh; background: #333; padding: 20px; box-sizing: border-box; transform: translateY(100%); transition: transform 0.3s ease-in-out; z-index: 1500; border-top-left-radius: 15px; border-top-right-radius: 15px; box-shadow: 0 -4px 10px rgba(0,0,0,0.5); overflow-y: auto; }
+        .slide-panel { position: absolute; bottom: 0; left: 0; width: 100%; height: 75vh; background: #333; padding: 20px; box-sizing: border-box; transform: translateY(100%); transition: transform 0.3s ease-in-out; z-index: 1500; border-top-left-radius: 15px; border-top-right-radius: 15px; overflow-y: auto; }
         .slide-panel.open { transform: translateY(0); }
         
-        .panel-section { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; background: #222; padding: 15px; border-radius: 8px; }
-        h3 { margin-top: 0; border-bottom: 1px solid #555; padding-bottom: 10px; font-size: 1.1rem; }
-        input[type="text"], select { padding: 10px; border-radius: 4px; border: none; font-size: 1rem; width: 100%; box-sizing: border-box; }
-        .action-btn { padding: 10px; border-radius: 4px; border: none; cursor: pointer; font-weight: bold; background: #1DB954; color: white; width: 100%; }
+        .panel-section { background: #222; padding: 15px; border-radius: 8px; margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px; }
+        h3, h4 { margin: 0; color: #1DB954; }
+        input[type="text"], select, textarea { padding: 12px; border-radius: 6px; background: #111; color: white; border: 1px solid #444; width: 100%; box-sizing: border-box; font-size: 1rem; }
+        .action-btn { padding: 12px; border-radius: 6px; border: none; font-weight: bold; background: #1DB954; color: white; cursor: pointer; }
         
-        /* Modals & Toggles */
-        .modal { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #333; padding: 20px; border-radius: 10px; z-index: 3000; width: 80%; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
-        .modal.open { display: block; }
+        /* Timeline Grid */
+        .stage-row { margin-bottom: 20px; }
+        .timeline-container { position: relative; height: 110px; background: #1a1a1a; border-radius: 8px; overflow-x: auto; border: 1px solid #333; scrollbar-width: none; -ms-overflow-style: none; }
+        .timeline-container::-webkit-scrollbar { display: none; }
         
+        .timeline-inner { position: relative; height: 100%; min-width: 2400px; } 
+        .artist-block { position: absolute; top: 10px; height: 90px; background: #222; border: 1px solid #444; border-radius: 6px; padding: 8px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; }
+        .artist-block .name { font-weight: bold; font-size: 0.8rem; }
+        .artist-block .time { font-size: 0.7rem; color: #888; }
+        .now-line { position: absolute; top: 0; bottom: 0; width: 2px; background: #ffaa00; z-index: 10; }
+
+        #my-schedule-scroller { overflow-x: auto; white-space: nowrap; padding-bottom: 10px; display: flex; gap: 10px; scrollbar-width: none; -ms-overflow-style: none; }
+        #my-schedule-scroller::-webkit-scrollbar { display: none; }
+
         .toggle-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #444; }
         .toggle-switch { width: 40px; height: 20px; background: #555; border-radius: 20px; position: relative; cursor: pointer; }
         .toggle-switch.on { background: #1DB954; }
         .toggle-switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; background: white; border-radius: 50%; transition: 0.2s; }
         .toggle-switch.on::after { left: 22px; }
+
+        .modal { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #222; padding: 20px; border-radius: 12px; z-index: 4000; width: 90%; border: 1px solid #444; }
+        .modal.open { display: block; }
     </style>
 </head>
 <body>
 
-    <div id="sos-alert-banner">
-        <i class="fa-solid fa-triangle-exclamation"></i> SOS TRIGGERED BY: <span id="sos-user-name">Friend</span>
+    <div id="sync-status-bar">
+        <div id="online-dot" style="width: 8px; height: 8px; background: #1DB954; border-radius: 50%;"></div>
+        <span id="sync-text">Connecting...</span>
+        <span id="last-sync-time"></span>
     </div>
 
-    <div id="map-wrapper">
-        <div id="scene-toggle" style="position: absolute; top: 10px; left: 50%; transform: translateX(-50%); z-index: 2000; background: rgba(0,0,0,0.8); border-radius: 20px; padding: 5px; display: flex; gap: 5px; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
-            <button id="btn-camping" style="padding: 8px 15px; border-radius: 15px; border: none; background: #1DB954; color: black; font-weight: bold; cursor: pointer;">Camping</button>
-            <button id="btn-venue" style="padding: 8px 15px; border-radius: 15px; border: none; background: transparent; color: white; cursor: pointer;">The Grove</button>
-        </div>
+    <div id="scene-toggle" style="position: absolute; top: 35px; left: 50%; transform: translateX(-50%); z-index: 2000; background: rgba(0,0,0,0.8); border-radius: 20px; padding: 5px; display: flex; gap: 5px;">
+        <button id="btn-camping" style="padding: 8px 15px; border-radius: 15px; border: none; background: #1DB954; color: black; font-weight: bold; cursor: pointer;">Camping</button>
+        <button id="btn-venue" style="padding: 8px 15px; border-radius: 15px; border: none; background: transparent; color: white; cursor: pointer;">The Grove</button>
+    </div>
 
-        <button id="sos-btn">SOS</button>
-        
-        <div id="map"></div>
+    <button id="sos-btn">SOS</button>
 
-        <div id="venue-map-container" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; overflow: hidden; background: #111;">
-            <div id="venue-img-wrapper" style="position: relative; width: 100%; height: 100%; transform-origin: center center; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-user-drag: none;">
-                <img id="venue-img" src="venue-2026.jpg" alt="The Grove" style="position: absolute; top:0; left:0; width: 1200px; max-width: none; pointer-events: none;">
-                
-                <div id="user-dot-venue" style="position: absolute; width: 16px; height: 16px; background: #1DB954; border: 2px solid #fff; border-radius: 50%; transform: translate(-50%, -50%); display: none; z-index: 10; box-shadow: 0 0 10px #1DB954;"></div>
-                <div id="venue-friends-container"></div>
-            </div>
-        </div>
+    <div id="map-wrapper"><div id="map"></div></div>
 
-        <div id="dev-calibration-panel" style="position: absolute; bottom: 80px; left: 10px; z-index: 3000; background: rgba(0,0,0,0.85); padding: 15px; border-radius: 8px; border: 1px solid #1DB954; display: none;">
-            <h4 style="margin: 0 0 10px 0; color: #1DB954;">Map Calibration Matrix</h4>
-            <div style="font-size: 12px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 5px;">
-                <div>Lat: <input type="text" id="dev-lat" value="27.2435" style="width: 80px; background: #333; color: #fff; border: 1px solid #555;"></div>
-                <div>Lon: <input type="text" id="dev-lon" value="-80.8298" style="width: 80px; background: #333; color: #fff; border: 1px solid #555;"></div>
-                <button id="dev-set-gps" class="sm-btn" style="background: #1DB954; color: black; margin-top: 5px;">Simulate GPS Ping</button>
-            </div>
-            <div style="display: flex; gap: 5px; flex-direction: column; margin-top: 15px;">
-                <button id="set-anchor-1" class="sm-btn" style="background: #444; text-align: left;">1: Anchor A (Portal)</button>
-                <button id="set-anchor-2" class="sm-btn" style="background: #444; text-align: left;">2: Anchor B (Aquachobee)</button>
-                <button id="set-anchor-3" class="sm-btn" style="background: #444; text-align: left;">3: Anchor C (Main Rd)</button>
-                <button id="clear-anchors" class="sm-btn" style="background: #900; margin-top: 10px;">Reset Matrix</button>
-            </div>
-            <div id="cal-status" style="font-size: 11px; margin-top: 10px; color: #aaa;">Status: Need 3 points</div>
+    <div id="venue-map-container" style="display: none; background: #111; overflow: hidden;">
+        <div id="venue-img-wrapper" style="position: relative; width: 100%; height: 100%; transform-origin: center center; touch-action: none;">
+            <img id="venue-img" src="venue-2026.jpg" style="position: absolute; top:0; left:0; width: 1200px; max-width: none; pointer-events: none;">
+            <div id="user-dot-venue" style="position: absolute; width: 16px; height: 16px; background: #1DB954; border: 2px solid #fff; border-radius: 50%; transform: translate(-50%, -50%); display: none; z-index: 10;"></div>
+            <div id="venue-friends-container"></div>
         </div>
-        
-        <div id="map-action-modal" class="modal">
-            <h3>Add Map Marker</h3>
-            <button class="action-btn" style="margin-bottom: 10px; background: #32cd32;">🏕️ Mark My Campsite</button>
-            <button class="action-btn" style="margin-bottom: 10px; background: #ffaa00;">⚠️ Map Correction (Wrong Info)</button>
-            <button class="action-btn" style="background: #444;" onclick="document.getElementById('map-action-modal').classList.remove('open')">Cancel</button>
-        </div>
-        
-        <div id="fest-panel" class="slide-panel">
-            <h3>Festival Lineup</h3>
-            <div class="panel-section">
-                <label>Filter by Stage</label>
-                <select><option>All Stages</option><option>Beings</option><option>Here</option></select>
-            </div>
-            <div id="artist-list" class="panel-section" style="background: transparent; padding: 0;">
-                <div style="padding: 10px; background: #222; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
-                    <div><strong>Artist Name</strong><br><small>8:00 PM - Beings Stage</small></div>
-                    <button style="background: #1DB954; color: white; border: none; padding: 8px; border-radius: 50%;"><i class="fa-solid fa-play"></i></button>
-                </div>
-            </div>
-            <div id="spotify-player" style="height: 80px; background: #000; border-radius: 8px; margin-top: 10px; text-align: center; line-height: 80px; color: #888;">Spotify Player Engine</div>
-        </div>
+    </div>
 
-        <div id="friends-panel" class="slide-panel">
-            <h3>Crew & Connections</h3>
-            
-            <div class="panel-section">
-                <h4 style="margin: 0 0 10px 0; color: #ffaa00;">Friend Requests</h4>
-                <div id="pending-requests-list">
-                    <p id="no-requests" style="font-size: 0.8rem; color: #888;">No pending requests.</p>
-                </div>
-            </div>
-
-            <div class="panel-section">
-                <label>Add to Crew</label>
-                <div style="display: flex; gap: 10px;">
-                    <input type="text" id="friend-input" placeholder="Username" />
-                    <button class="action-btn" id="add-friend-btn" style="width: auto;">Send</button>
-                </div>
-            </div>
-            
-            <div class="panel-section">
-                <h4 style="margin: 0 0 10px 0;">My Crew</h4>
-                <div id="friends-list-container">
-                    </div>
-            </div>
-        </div>
-
-        <div id="settings-panel" class="slide-panel">
-            <h3>Settings</h3>
-            <div class="panel-section">
-                <h4 style="margin: 0 0 10px 0;">Account (Cognito)</h4>
-                <p style="font-size: 0.9rem; color: #aaa; margin-top: 0;">Sign in to save your crew and campsite.</p>
-                <button id="google-login-btn" class="action-btn" style="background: #4285F4; margin-bottom: 10px;"><i class="fa-brands fa-google"></i> Sign in with Google</button>
-                <button id="email-login-btn" class="action-btn" style="background: #333; border: 1px solid #555;">Use Email / Password</button>
-            </div>
-            
-            <div class="panel-section">
-                <label style="color: #ffaa00;">Dev Login (Temporary)</label>
-                <div style="display: flex; gap: 10px;">
-                    <input type="text" id="user-id-input" placeholder="Username (e.g. Marno)" />
-                    <button id="auth-btn" class="action-btn" style="width: auto;">Set User</button>
-                </div>
-            </div>
-            
-            <div class="panel-section">
-                <label>SOS Broadcast Default</label>
-                <select id="sos-target">
-                    <option value="friends">Friends Only</option>
-                    <option value="everyone">Everyone Nearby</option>
+    <!-- PANELS -->
+    <div id="fest-panel" class="slide-panel">
+        <h3>Festival Hub</h3>
+        <div class="panel-section">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h4>Schedule</h4>
+                <select id="schedule-day-select" style="width:auto; padding:5px;">
+                    <option value="Thursday">Thursday</option><option value="Friday">Friday</option><option value="Saturday">Saturday</option><option value="Sunday">Sunday</option>
                 </select>
+            </div>
+            <div id="festival-schedule-container"></div>
+            <div id="spotify-player-container"></div>
+        </div>
+        <div class="panel-section">
+            <h4>My Saved Artists</h4>
+            <div id="my-schedule-scroller"></div>
+        </div>
+        <div class="panel-section">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h4>Public Events</h4>
+                <button class="action-btn" style="padding: 5px 10px;" onclick="document.getElementById('public-event-modal').classList.add('open')">Add Event</button>
+            </div>
+            <div id="public-events-list"></div>
+        </div>
+    </div>
+
+    <div id="friends-panel" class="slide-panel">
+        <h3>Crew</h3>
+        <div class="panel-section">
+            <h4>Incoming Requests</h4>
+            <div id="pending-requests-list"></div>
+        </div>
+        <div class="panel-section">
+            <label>Find Friend by User ID</label>
+            <div style="display:flex; gap:10px;">
+                <input type="text" id="friend-input" placeholder="User ID...">
+                <button class="action-btn" id="add-friend-btn">Invite</button>
+            </div>
+        </div>
+        <div class="panel-section">
+            <h4>My Crew</h4>
+            <div id="friends-list-container"></div>
+        </div>
+    </div>
+
+    <div id="settings-panel" class="slide-panel">
+        <h3>Settings & Profile</h3>
+        <div class="panel-section">
+            <h4>Identity</h4>
+            <label>Display Name (Map Label)</label>
+            <div style="display:flex; gap:10px;">
+                <input type="text" id="display-name-input">
+                <button class="action-btn" id="save-profile-btn">Save</button>
+            </div>
+            <div id="spotify-settings-container"></div>
+        </div>
+
+        <div class="panel-section">
+            <h4 style="color:#ffaa00;">Dev Login (Temporary)</h4>
+            <div style="display:flex; gap:10px;">
+                <input type="text" id="user-id-input" placeholder="User ID...">
+                <button class="action-btn" id="auth-btn">Set User</button>
+            </div>
+        </div>
+
+        <div class="panel-section">
+            <h4>Actions</h4>
+            <button class="action-btn" id="manual-campsite-btn" style="background:#32cd32;">🏕️ Set Current Location as Campsite</button>
+            <button class="action-btn" id="report-bug-btn" style="background:#444;">🐛 Submit Bug Report</button>
+        </div>
+        <div class="panel-section">
+            <button class="action-btn" id="email-login-btn">Log In / Sign Up</button>
+            <button class="action-btn" id="sign-out-btn" style="background:#900; margin-top:10px;">Sign Out</button>
+        </div>
+    </div>
+
+    <div id="compass-panel" class="slide-panel">
+        <h3>Compass</h3>
+        <div class="panel-section">
+            <select id="compass-target-select"></select>
+            <div class="compass-container">
+                <div id="compass-distance">--- ft</div>
+                <i id="compass-arrow-icon" class="fa-solid fa-location-arrow compass-arrow"></i>
             </div>
         </div>
     </div>
 
     <div id="bottom-nav">
         <button class="nav-btn" id="nav-fest"><i class="fa-solid fa-music"></i></button>
+        <button class="nav-btn" id="nav-compass"><i class="fa-solid fa-compass"></i></button>
         <button class="nav-btn" id="nav-friends"><i class="fa-solid fa-user-group"></i></button>
         <button class="nav-btn" id="nav-settings"><i class="fa-solid fa-gear"></i></button>
+    </div>
+
+    <!-- MODALS -->
+    <div id="map-action-modal" class="modal">
+        <h3>Map Actions</h3>
+        <button class="action-btn" id="modal-campsite-btn" style="margin-bottom:10px; background:#32cd32; width:100%;">🏕️ Mark My Campsite Here</button>
+        <button class="action-btn" id="modal-report-btn" style="margin-bottom:10px; background:#ffaa00; width:100%;">⚠️ Map Correction</button>
+        <button class="action-btn" style="background:#444; width:100%;" onclick="document.getElementById('map-action-modal').classList.remove('open')">Cancel</button>
+    </div>
+
+    <div id="public-event-modal" class="modal">
+        <h3>Create Public Event</h3>
+        <input type="text" id="event-title" placeholder="Event Title" style="margin-bottom:10px;">
+        <input type="text" id="event-location" placeholder="Location" style="margin-bottom:10px;">
+        <textarea id="event-desc" placeholder="Description..." style="height:80px; margin-bottom:10px;"></textarea>
+        <button class="action-btn" id="submit-public-event">Post to Everyone</button>
+        <button class="action-btn" style="background:#444; margin-top:10px;" onclick="document.getElementById('public-event-modal').classList.remove('open')">Cancel</button>
+    </div>
+
+    <div id="friend-schedule-modal" class="modal">
+        <h3 id="friend-schedule-title">Schedule</h3>
+        <div id="friend-schedule-content" style="max-height:300px; overflow-y:auto;"></div>
+        <button class="action-btn" style="width:100%; margin-top:10px;" onclick="document.getElementById('friend-schedule-modal').classList.remove('open')">Close</button>
+    </div>
+
+    <div id="loud-sos-modal" class="modal">
+        <h2 style="color:#ff4444; text-align:center;">⚠️ SOS ALERT ⚠️</h2>
+        <p style="text-align:center;"><span id="loud-sos-name">Someone</span> needs immediate help!</p>
+        <button class="action-btn" style="width:100%;" onclick="respondToSos()">On my way!</button>
     </div>
 
 </body>

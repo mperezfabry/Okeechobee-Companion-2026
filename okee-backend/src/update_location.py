@@ -38,64 +38,59 @@ def lambda_handler(event, context):
 
         lat = Decimal(str(lat_val))
         lon = Decimal(str(lon_val))
+        display_name = body.get('display_name')
 
-        # --- DEV TESTING ZONES ---
-        ncf_poly = [
-            [27.38597225300921, -82.55970239639284],
-            [27.385872231636885, -82.55817353725435],
-            [27.38423853641825, -82.55810379981996],
-            [27.384505263816454, -82.55982041358949]
-        ]
-        
         current_zone_name = "The Void"
         current_zone_type = "OUT_OF_BOUNDS"
-        is_dev_zone = False
-
-        if is_point_in_polygon(float(lat), float(lon), ncf_poly):
-            current_zone_name = "NCF Campus (Test)"
-            current_zone_type = "CAMPGROUND"  # Successfully switched to CAMPGROUND
-            is_dev_zone = True
 
         # --- PRODUCTION ZONES ---
-        if not is_dev_zone:
-            zones_response = fest_table.scan(
-                FilterExpression="#t = :val",
-                ExpressionAttributeNames={"#t": "Type"},
-                ExpressionAttributeValues={":val": "Zone"}
-            )
-            all_zones = zones_response.get('Items', [])
+        zones_response = fest_table.scan(
+            FilterExpression="#t = :val",
+            ExpressionAttributeNames={"#t": "Type"},
+            ExpressionAttributeValues={":val": "Zone"}
+        )
+        all_zones = zones_response.get('Items', [])
 
-            full_zone = next((z for z in all_zones if z['ZoneName'] == 'Full Zone'), None)
-            if full_zone and not is_point_in_polygon(float(lat), float(lon), full_zone['Coordinates']):
-                return {'statusCode': 200, 'headers': {'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'message': 'Outside festival perimeter. Tracking paused.'})}
-
-            venue_zones = [z for z in all_zones if z['ZoneType'] == 'VENUE']
-            for zone in venue_zones:
+        # Priority 1: Venue
+        venue_zones = [z for z in all_zones if z['ZoneType'] == 'VENUE']
+        for zone in venue_zones:
+            if is_point_in_polygon(float(lat), float(lon), zone['Coordinates']):
+                current_zone_name = zone['ZoneName']
+                current_zone_type = "VENUE"
+                break
+        
+        # Priority 2: Campground
+        if current_zone_type == "OUT_OF_BOUNDS":
+            camp_zones = [z for z in all_zones if z['ZoneType'] == 'CAMPGROUND']
+            for zone in camp_zones:
                 if is_point_in_polygon(float(lat), float(lon), zone['Coordinates']):
                     current_zone_name = zone['ZoneName']
-                    current_zone_type = "VENUE"
+                    current_zone_type = "CAMPGROUND"
                     break
-            
-            if current_zone_type == "OUT_OF_BOUNDS":
-                camp_zones = [z for z in all_zones if z['ZoneType'] == 'CAMPGROUND']
-                for zone in camp_zones:
-                    if is_point_in_polygon(float(lat), float(lon), zone['Coordinates']):
-                        current_zone_name = zone['ZoneName']
-                        current_zone_type = "CAMPGROUND"
-                        break
 
         geohash = pgh.encode(float(lat), float(lon), precision=7)
         timestamp = datetime.now(timezone.utc).isoformat()
 
+        # Update the user's location record
+        update_expr = "SET CurrentLocation = :loc, ZoneName = :zn, ZoneType = :zt, LastUpdated = :time"
+        expr_attrs = {
+            ':loc': {'lat': lat, 'lon': lon, 'geohash': geohash},
+            ':zn': current_zone_name,
+            ':zt': current_zone_type,
+            ':time': timestamp,
+            ':uid': user_id
+        }
+
+        if display_name:
+            update_expr += ", DisplayName = :dn"
+            expr_attrs[':dn'] = display_name
+        else:
+            update_expr += ", DisplayName = if_not_exists(DisplayName, :uid)"
+
         user_table.update_item(
             Key={'UserId': user_id},
-            UpdateExpression="SET CurrentLocation = :loc, ZoneName = :zn, ZoneType = :zt, LastUpdated = :time",
-            ExpressionAttributeValues={
-                ':loc': {'lat': lat, 'lon': lon, 'geohash': geohash},
-                ':zn': current_zone_name,
-                ':zt': current_zone_type,
-                ':time': timestamp
-            }
+            UpdateExpression=update_expr,
+            ExpressionAttributeValues=expr_attrs
         )
 
         return {

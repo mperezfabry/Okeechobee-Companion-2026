@@ -53,6 +53,15 @@ Resources:
       PrimaryKey:
         Name: ReportId
         Type: String
+
+  # 4b. Public Events Table (One per user limit enforced by UserId PK)
+  OkeePublicEventsTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      TableName: okee-public-events
+      PrimaryKey:
+        Name: UserId
+        Type: String
           
   # 5. The API Gateway
   OkeeApi:
@@ -102,6 +111,7 @@ Resources:
         Variables:
           SPOTIFY_CLIENT_ID: '{{resolve:ssm:SpotifyClientId}}'
           SPOTIFY_SECRET_NAME: 'SpotifyClientSecret'
+          FRONTEND_URL: 'http://localhost:5500/'
       Events:
         CallbackRoute:
           Type: Api
@@ -146,6 +156,8 @@ Resources:
             TableName: !Ref OkeeLineupTable
         - DynamoDBCrudPolicy:
             TableName: !Ref OkeeReportsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref OkeePublicEventsTable
       Events:
         MapDataRoute:
           Type: Api
@@ -188,6 +200,11 @@ Resources:
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref OkeeLineupTable
+      Events:
+        ScheduleEvent:
+          Type: Schedule
+          Properties:
+            Schedule: rate(12 hours)
 
   # 12. SOS Toggle Function
   UpdateSosFunction:
@@ -231,7 +248,7 @@ Resources:
     Properties:
       CodeUri: src/
       Handler: campsite.lambda_handler
-      Runtime: python3.9
+      Runtime: python3.12
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref UserDataTable
@@ -239,5 +256,134 @@ Resources:
         CampsiteApi:
           Type: Api
           Properties:
+            RestApiId: !Ref OkeeApi
             Path: /campsite
-            Method: post
+            Method: POST
+
+  # 14b. Personal Schedule Function
+  UpdatePersonalScheduleFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: update_personal_schedule.lambda_handler
+      Runtime: python3.12
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserDataTable
+      Events:
+        SchedulePostRoute:
+          Type: Api
+          Properties:
+            RestApiId: !Ref OkeeApi
+            Path: /schedule
+            Method: POST
+
+  # 14c. Manage Public Events Function
+  ManagePublicEventsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: manage_public_events.lambda_handler
+      Runtime: python3.12
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref OkeePublicEventsTable
+      Events:
+        PublicEventsPostRoute:
+          Type: Api
+          Properties:
+            RestApiId: !Ref OkeeApi
+            Path: /public-events
+            Method: POST
+        PublicEventsGetRoute:
+          Type: Api
+          Properties:
+            RestApiId: !Ref OkeeApi
+            Path: /public-events
+            Method: GET
+
+  # 15. Cognito User Pool (The User Database)
+  OkeeUserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: OkeeUsers
+      AutoVerifiedAttributes:
+        - email
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: false
+          RequireUppercase: false
+
+  # 16. Cognito App Client (The Connection)
+  OkeeUserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: OkeeFrontend
+      UserPoolId: !Ref OkeeUserPool
+      GenerateSecret: false
+      ExplicitAuthFlows:
+        - ALLOW_USER_SRP_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+      SupportedIdentityProviders:
+        - COGNITO
+      AllowedOAuthFlows:
+        - implicit
+      AllowedOAuthFlowsUserPoolClient: true
+      AllowedOAuthScopes:
+        - email
+        - openid
+        - profile
+      CallbackURLs:
+        - http://localhost:5500/okee-frontend/index.html
+        - http://127.0.0.1:5500/okee-frontend/index.html
+        - http://localhost:5500/index.html
+        - http://127.0.0.1:5500/index.html
+        - http://localhost:5500/
+        - http://127.0.0.1:5500/
+        - http://localhost:5500
+        - http://127.0.0.1:5500
+        - http://127.0.0.1:5500/okee-frontend/
+        - http://localhost:5500/okee-frontend/
+        - https://okeecho.be/
+        - https://www.okeecho.be/
+        - https://okeecho.be/index.html
+        - https://www.okeecho.be/index.html
+      LogoutURLs:
+        - http://localhost:5500/okee-frontend/index.html
+        - http://localhost:5500/index.html
+        - http://localhost:5500/
+        - http://localhost:5500
+        - https://okeecho.be/
+        - https://www.okeecho.be/
+        - https://okeecho.be/index.html
+        - https://www.okeecho.be/index.html
+
+  # 17. Hosted UI Domain
+  OkeeAuthDomain:
+    Type: AWS::Cognito::UserPoolDomain
+    Properties:
+      Domain: !Sub okee-app-${AWS::AccountId}
+      UserPoolId: !Ref OkeeUserPool
+
+  # 18. Auto-Confirm Trigger (No Email Required)
+  AutoConfirmFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: auto_confirm.lambda_handler
+      Runtime: python3.12
+      Events:
+        CognitoTrigger:
+          Type: Cognito
+          Properties:
+            Trigger: PreSignUp
+            UserPool: !Ref OkeeUserPool
+
+Outputs:
+  CognitoDomain:
+    Value: !Sub https://okee-app-${AWS::AccountId}.auth.${AWS::Region}.amazoncognito.com
+  CognitoClientId:
+    Value: !Ref OkeeUserPoolClient

@@ -32,21 +32,25 @@ def lambda_handler(event, context):
         }
 
     try:
-        # 1. Get friend list and permissions
+        # 1. Get user data
         user_response = user_table.get_item(Key={'UserId': user_id})
         user_doc = user_response.get('Item', {})
         friend_ids = list(user_doc.get('Friends', {}).keys())
+        my_campsite = user_doc.get('campsite')
+        my_schedule = user_doc.get('PersonalSchedule', [])
+        display_name = user_doc.get('DisplayName', user_id)
+        spotify_connected = 'SpotifyAccessToken' in user_doc
         
         friends_location_data = []
 
-        # 2. Fetch friend data with Privacy Wall logic
+        # 2. Fetch friend data with New Granular Privacy logic
         if friend_ids:
             keys_to_get = [{'UserId': fid} for fid in friend_ids]
             batch_response = dynamodb.batch_get_item(
                 RequestItems={
                     'okee-user-data': {
                         'Keys': keys_to_get,
-                        'ProjectionExpression': 'UserId, DisplayName, CurrentLocation, Friends, SosStatus, ZoneType'
+                        'ProjectionExpression': 'UserId, DisplayName, CurrentLocation, Friends, SosStatus, ZoneType, campsite, PersonalSchedule'
                     }
                 }
             )
@@ -54,27 +58,39 @@ def lambda_handler(event, context):
             friend_docs = batch_response.get('Responses', {}).get('okee-user-data', [])
             
             for f_doc in friend_docs:
+                # Get the permissions THAT friend gave to THIS user
                 friend_permissions = f_doc.get('Friends', {}).get(user_id, {})
-                base_location_shared = friend_permissions.get('shareLocation', False)
-                camp_location_shared = friend_permissions.get('shareCamp', False)
+                venue_shared = friend_permissions.get('shareLocationVenue', False)
+                camp_shared = friend_permissions.get('shareLocationCampground', False)
+                pin_shared = friend_permissions.get('shareCampsitePin', False)
+                schedule_shared = friend_permissions.get('shareSchedule', False)
 
-                if base_location_shared and 'CurrentLocation' in f_doc:
-                    friend_zone_type = f_doc.get('ZoneType', 'OUT_OF_BOUNDS')
-                    
-                    is_visible = False
-                    if friend_zone_type == 'VENUE':
-                        is_visible = True
-                    elif friend_zone_type == 'CAMPGROUND' and camp_location_shared:
-                        is_visible = True
-                    
-                    if is_visible:
-                        friends_location_data.append({
-                            'user_id': f_doc['UserId'],
-                            'name': f_doc.get('DisplayName', 'Unknown'),
-                            'location': f_doc['CurrentLocation'],
-                            'zone': friend_zone_type,
-                            'sos_active': f_doc.get('SosStatus', {}).get('active', False)
-                        })
+                friend_payload = {
+                    'user_id': f_doc['UserId'],
+                    'name': f_doc.get('DisplayName', f_doc['UserId']),
+                    'zone': f_doc.get('ZoneType', 'OUT_OF_BOUNDS')
+                }
+
+                # Determine GPS visibility
+                is_gps_visible = False
+                if friend_payload['zone'] == 'VENUE' and venue_shared:
+                    is_gps_visible = True
+                elif friend_payload['zone'] == 'CAMPGROUND' and camp_shared:
+                    is_gps_visible = True
+                
+                if is_gps_visible and 'CurrentLocation' in f_doc:
+                    friend_payload['location'] = f_doc['CurrentLocation']
+                    friend_payload['sos_active'] = f_doc.get('SosStatus', {}).get('active', False)
+
+                # Add Campsite if shared
+                if pin_shared and f_doc.get('campsite'):
+                    friend_payload['campsite'] = f_doc['campsite']
+
+                # Add Schedule if shared
+                if schedule_shared:
+                    friend_payload['schedule'] = f_doc.get('PersonalSchedule', [])
+
+                friends_location_data.append(friend_payload)
 
         # 3. Find nearby SOS broadcasts
         sos_alerts = []
@@ -89,12 +105,13 @@ def lambda_handler(event, context):
                 if alert['UserId'] != user_id and alert['UserId'] not in friend_ids:
                     sos_alerts.append({ 'user_id': alert['UserId'], 'location': alert['CurrentLocation'] })
 
-        # 4. Fetch Map Geofences, Lineup, and Reports
+        # 4. Fetch App Data
         zones = fest_table.scan(FilterExpression="#t = :val", ExpressionAttributeNames={"#t": "Type"}, ExpressionAttributeValues={":val": "Zone"}).get('Items', [])
-        
-        # Pull the newly seeded data
         lineup = lineup_table.scan().get('Items', [])
         reports = reports_table.scan().get('Items', [])
+        
+        public_events_table = dynamodb.Table('okee-public-events')
+        public_events = public_events_table.scan().get('Items', [])
 
         return {
             'statusCode': 200,
@@ -104,11 +121,16 @@ def lambda_handler(event, context):
                 'Access-Control-Allow-Methods': 'OPTIONS,GET'
             },
             'body': json.dumps({
+                'my_campsite': my_campsite,
+                'my_schedule': my_schedule,
+                'display_name': display_name,
+                'spotify_connected': spotify_connected,
                 'friends': friends_location_data,
                 'nearby_sos': sos_alerts,
                 'zones': zones,
                 'lineup': lineup,
-                'reports': reports
+                'reports': reports,
+                'public_events': public_events
             }, cls=DecimalEncoder)
         }
 

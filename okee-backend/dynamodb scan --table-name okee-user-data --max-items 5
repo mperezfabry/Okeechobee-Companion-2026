@@ -1,0 +1,93 @@
+{
+    "Items": [
+        {
+            "Stage": {
+                "S": "TBD"
+            },
+            "Time": {
+                "S": "TBD"
+            },
+            "ArtistId": {
+                "S": "99"
+            },
+            "SpotifyURI": {
+                "S": "spotify:artist:48wqXzcBy1h0LWFgficXv6"
+            },
+            "Name": {
+                "S": "Rigopolar"
+            }
+        },
+        {
+            "Stage": {
+                "S": "TBD"
+            },
+            "Time": {
+                "S": "TBD"
+            },
+            "ArtistId": {
+                "S": "63"
+            },
+            "SpotifyURI": {
+                "S": "spotify:artist:0boYq8rOKH5mO7MSHXd8jy"
+            },
+            "Name": {
+                "S": "Leo Del Toro"
+            }
+        },
+        {
+            "Stage": {
+                "S": "TBD"
+            },
+            "Time": {
+                "S": "TBD"
+            },
+            "ArtistId": {
+                "S": "92"
+            },
+            "SpotifyURI": {
+                "S": "spotify:artist:4hz8tIajF2INpgM0qzPJz2"
+            },
+            "Name": {
+                "S": "Rainbow Kitten Surprise"
+            }
+        },
+        {
+            "Stage": {
+                "S": "TBD"
+            },
+            "Time": {
+                "S": "TBD"
+            },
+            "ArtistId": {
+                "S": "120"
+            },
+            "SpotifyURI": {
+                "S": "spotify:artist:1edl5fzpdS471TaQ8Bgs3w"
+            },
+            "Name": {
+                "S": "Scientist"
+            }
+        },
+        {
+            "Stage": {
+                "S": "TBD"
+            },
+            "Time": {
+                "S": "TBD"
+            },
+            "ArtistId": {
+                "S": "64"
+            },
+            "SpotifyURI": {
+                "S": "spotify:artist:1ZpDxqXS6HAvoZyCzQfKRb"
+            },
+            "Name": {
+                "S": "LEVEL UP"
+            }
+        }
+    ],
+    "Count": 134,
+    "ScannedCount": 134,
+    "ConsumedCapacity": null,
+    "NextToken": "eyJFeGNsdXNpdmVTdGFydEtleSI6IG51bGwsICJib3RvX3RydW5jYXRlX2Ftb3VudCI6IDV9"
+}
