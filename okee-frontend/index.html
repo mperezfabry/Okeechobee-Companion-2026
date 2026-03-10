@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Okee Tracker 2026</title>
     
     <link rel="manifest" href="manifest.json">
@@ -18,18 +18,18 @@
     <style>
         .leaflet-container { background: #111 !important; }
         .sm-btn { cursor: pointer; border: none; padding: 10px 15px; border-radius: 6px; color: white; font-weight: bold; font-size: 1.1rem; min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: center; }
-        body { margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; width: 100vw; overflow: hidden; font-family: Arial, sans-serif; background: #111; color: white; }
+        body { margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; height: 100dvh; width: 100vw; overflow: hidden; font-family: Arial, sans-serif; background: #111; color: white; }
         
         #sync-status-bar { height: 25px; background: #222; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; color: #888; border-bottom: 1px solid #333; gap: 10px; z-index: 3000; }
 
-        #map-wrapper, #venue-map-container { flex-grow: 1; position: relative; width: 100%; height: calc(100vh - 85px); }
+        #map-wrapper, #venue-map-container { flex-grow: 1; position: relative; width: 100%; height: 0; }
         #map { height: 100%; width: 100%; z-index: 1; }
 
         #sos-btn { position: absolute; top: 60px; right: 20px; z-index: 1000; background: #cc0000; color: white; border: none; font-weight: bold; width: 70px; height: 70px; border-radius: 50%; font-size: 1.2rem; box-shadow: 0 4px 10px rgba(0,0,0,0.5); cursor: pointer; }
         #sos-btn.active { background: #ff0000; box-shadow: 0 0 15px #ff0000; animation: pulse 1s infinite; }
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
 
-        #bottom-nav { height: 60px; background: #222; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #444; z-index: 2000; }
+        #bottom-nav { height: 60px; padding-bottom: env(safe-area-inset-bottom); background: #222; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #444; z-index: 2000; }
         .nav-btn { background: none; border: none; color: #888; font-size: 1.5rem; padding: 10px; cursor: pointer; }
         .nav-btn.active { color: #1DB954; }
 
