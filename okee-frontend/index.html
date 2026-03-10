@@ -22,18 +22,22 @@
         
         #sync-status-bar { height: 25px; background: #222; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; color: #888; border-bottom: 1px solid #333; gap: 10px; z-index: 3000; }
 
-        #map-wrapper, #venue-map-container { flex-grow: 1; position: relative; width: 100%; height: 0; }
+        #main-layout { display: flex; flex-grow: 1; height: 0; position: relative; width: 100%; }
+        
+        #side-nav { width: 60px; background: #222; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 15px; border-right: 1px solid #444; z-index: 2000; }
+        .nav-btn { background: none; border: none; color: #888; font-size: 1.5rem; padding: 15px 5px; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .nav-btn.active { color: #1DB954; border-left: 3px solid #1DB954; }
+
+        #content-wrapper { flex-grow: 1; position: relative; height: 100%; overflow: hidden; }
+
+        #map-wrapper, #venue-map-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
         #map { height: 100%; width: 100%; z-index: 1; }
 
-        #sos-btn { position: absolute; top: 60px; right: 20px; z-index: 1000; background: #cc0000; color: white; border: none; font-weight: bold; width: 70px; height: 70px; border-radius: 50%; font-size: 1.2rem; box-shadow: 0 4px 10px rgba(0,0,0,0.5); cursor: pointer; }
+        #sos-btn { position: absolute; top: 20px; right: 20px; z-index: 1000; background: #cc0000; color: white; border: none; font-weight: bold; width: 70px; height: 70px; border-radius: 50%; font-size: 1.2rem; box-shadow: 0 4px 10px rgba(0,0,0,0.5); cursor: pointer; }
         #sos-btn.active { background: #ff0000; box-shadow: 0 0 15px #ff0000; animation: pulse 1s infinite; }
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
 
-        #bottom-nav { height: 60px; padding-bottom: env(safe-area-inset-bottom); background: #222; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #444; z-index: 2000; }
-        .nav-btn { background: none; border: none; color: #888; font-size: 1.5rem; padding: 10px; cursor: pointer; }
-        .nav-btn.active { color: #1DB954; }
-
-        .slide-panel { position: absolute; bottom: 0; left: 0; width: 100%; height: 75vh; background: #333; padding: 20px; box-sizing: border-box; transform: translateY(100%); transition: transform 0.3s ease-in-out; z-index: 1500; border-top-left-radius: 15px; border-top-right-radius: 15px; overflow-y: auto; }
+        .slide-panel { position: absolute; bottom: 0; left: 0; width: 100%; height: 85%; background: #333; padding: 20px; box-sizing: border-box; transform: translateY(100%); transition: transform 0.3s ease-in-out; z-index: 1500; border-top-left-radius: 15px; border-top-right-radius: 15px; overflow-y: auto; box-shadow: 0 -5px 15px rgba(0,0,0,0.5); }
         .slide-panel.open { transform: translateY(0); }
         
         .panel-section { background: #222; padding: 15px; border-radius: 8px; margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px; }
@@ -63,6 +67,11 @@
 
         .modal { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #222; padding: 20px; border-radius: 12px; z-index: 4000; width: 90%; border: 1px solid #444; }
         .modal.open { display: block; }
+
+        @media (max-width: 600px) {
+            #side-nav { width: 50px; gap: 10px; }
+            .nav-btn { font-size: 1.3rem; }
+        }
     </style>
 </head>
 <body>
@@ -73,115 +82,119 @@
         <span id="last-sync-time"></span>
     </div>
 
-    <div id="scene-toggle" style="position: absolute; top: 35px; left: 50%; transform: translateX(-50%); z-index: 2000; background: rgba(0,0,0,0.8); border-radius: 20px; padding: 5px; display: flex; gap: 5px;">
-        <button id="btn-camping" style="padding: 8px 15px; border-radius: 15px; border: none; background: #1DB954; color: black; font-weight: bold; cursor: pointer;">Camping</button>
-        <button id="btn-venue" style="padding: 8px 15px; border-radius: 15px; border: none; background: transparent; color: white; cursor: pointer;">The Grove</button>
-    </div>
+    <div id="main-layout">
+        <nav id="side-nav">
+            <button class="nav-btn" id="nav-fest"><i class="fa-solid fa-music"></i></button>
+            <button class="nav-btn" id="nav-compass"><i class="fa-solid fa-compass"></i></button>
+            <button class="nav-btn" id="nav-friends"><i class="fa-solid fa-user-group"></i></button>
+            <button class="nav-btn" id="nav-settings"><i class="fa-solid fa-gear"></i></button>
+        </nav>
 
-    <button id="sos-btn">SOS</button>
-
-    <div id="map-wrapper"><div id="map"></div></div>
-
-    <div id="venue-map-container" style="display: none; background: #111; overflow: hidden;">
-        <div id="venue-img-wrapper" style="position: relative; width: 100%; height: 100%; transform-origin: center center; touch-action: none;">
-            <img id="venue-img" src="venue-2026.jpg" style="position: absolute; top:0; left:0; width: 1200px; max-width: none; pointer-events: none;">
-            <div id="user-dot-venue" style="position: absolute; width: 16px; height: 16px; background: #1DB954; border: 2px solid #fff; border-radius: 50%; transform: translate(-50%, -50%); display: none; z-index: 10;"></div>
-            <div id="venue-friends-container"></div>
-        </div>
-    </div>
-
-    <!-- PANELS -->
-    <div id="fest-panel" class="slide-panel">
-        <h3>Festival Hub</h3>
-        <div class="panel-section">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h4>Schedule</h4>
-                <select id="schedule-day-select" style="width:auto; padding:5px;">
-                    <option value="Thursday">Thursday</option><option value="Friday">Friday</option><option value="Saturday">Saturday</option><option value="Sunday">Sunday</option>
-                </select>
+        <div id="content-wrapper">
+            <div id="scene-toggle" style="position: absolute; top: 15px; left: 50%; transform: translateX(-50%); z-index: 2000; background: rgba(0,0,0,0.8); border-radius: 20px; padding: 5px; display: flex; gap: 5px;">
+                <button id="btn-camping" style="padding: 8px 15px; border-radius: 15px; border: none; background: #1DB954; color: black; font-weight: bold; cursor: pointer;">Camping</button>
+                <button id="btn-venue" style="padding: 8px 15px; border-radius: 15px; border: none; background: transparent; color: white; cursor: pointer;">The Grove</button>
             </div>
-            <div id="festival-schedule-container"></div>
-            <div id="spotify-player-container"></div>
-        </div>
-        <div class="panel-section">
-            <h4>My Saved Artists</h4>
-            <div id="my-schedule-scroller"></div>
-        </div>
-        <div class="panel-section">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h4>Public Events</h4>
-                <button class="action-btn" style="padding: 5px 10px;" onclick="document.getElementById('public-event-modal').classList.add('open')">Add Event</button>
+
+            <button id="sos-btn">SOS</button>
+
+            <div id="map-wrapper"><div id="map"></div></div>
+
+            <div id="venue-map-container" style="display: none; background: #111; overflow: hidden;">
+                <div id="venue-img-wrapper" style="position: relative; width: 100%; height: 100%; transform-origin: center center; touch-action: none;">
+                    <img id="venue-img" src="venue-2026.jpg" style="position: absolute; top:0; left:0; width: 1200px; max-width: none; pointer-events: none;">
+                    <div id="user-dot-venue" style="position: absolute; width: 16px; height: 16px; background: #1DB954; border: 2px solid #fff; border-radius: 50%; transform: translate(-50%, -50%); display: none; z-index: 10;"></div>
+                    <div id="venue-friends-container"></div>
+                </div>
             </div>
-            <div id="public-events-list"></div>
-        </div>
-    </div>
 
-    <div id="friends-panel" class="slide-panel">
-        <h3>Crew</h3>
-        <div class="panel-section">
-            <h4>Incoming Requests</h4>
-            <div id="pending-requests-list"></div>
-        </div>
-        <div class="panel-section">
-            <label>Find Friend by User ID</label>
-            <div style="display:flex; gap:10px;">
-                <input type="text" id="friend-input" placeholder="User ID...">
-                <button class="action-btn" id="add-friend-btn">Invite</button>
+            <!-- PANELS inside content wrapper so they slide over the map but not the sidebar -->
+            <div id="fest-panel" class="slide-panel">
+                <h3>Festival Hub</h3>
+                <div class="panel-section">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <h4>Schedule</h4>
+                        <select id="schedule-day-select" style="width:auto; padding:5px;">
+                            <option value="Thursday">Thursday</option><option value="Friday">Friday</option><option value="Saturday">Saturday</option><option value="Sunday">Sunday</option>
+                        </select>
+                    </div>
+                    <div id="festival-schedule-container"></div>
+                    <div id="spotify-player-container"></div>
+                </div>
+                <div class="panel-section">
+                    <h4>My Saved Artists</h4>
+                    <div id="my-schedule-scroller"></div>
+                </div>
+                <div class="panel-section">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <h4>Public Events</h4>
+                        <button class="action-btn" style="padding: 5px 10px;" onclick="document.getElementById('public-event-modal').classList.add('open')">Add Event</button>
+                    </div>
+                    <div id="public-events-list"></div>
+                </div>
+            </div>
+
+            <div id="friends-panel" class="slide-panel">
+                <h3>Crew</h3>
+                <div class="panel-section">
+                    <h4>Incoming Requests</h4>
+                    <div id="pending-requests-list"></div>
+                </div>
+                <div class="panel-section">
+                    <label>Find Friend by User ID</label>
+                    <div style="display:flex; gap:10px;">
+                        <input type="text" id="friend-input" placeholder="User ID...">
+                        <button class="action-btn" id="add-friend-btn">Invite</button>
+                    </div>
+                </div>
+                <div class="panel-section">
+                    <h4>My Crew</h4>
+                    <div id="friends-list-container"></div>
+                </div>
+            </div>
+
+            <div id="settings-panel" class="slide-panel">
+                <h3>Settings & Profile</h3>
+                <div class="panel-section">
+                    <h4>Identity</h4>
+                    <label>Display Name (Map Label)</label>
+                    <div style="display:flex; gap:10px;">
+                        <input type="text" id="display-name-input">
+                        <button class="action-btn" id="save-profile-btn">Save</button>
+                    </div>
+                    <div id="spotify-settings-container"></div>
+                </div>
+
+                <div class="panel-section">
+                    <h4 style="color:#ffaa00;">Dev Login (Temporary)</h4>
+                    <div style="display:flex; gap:10px;">
+                        <input type="text" id="user-id-input" placeholder="User ID...">
+                        <button class="action-btn" id="auth-btn">Set User</button>
+                    </div>
+                </div>
+
+                <div class="panel-section">
+                    <h4>Actions</h4>
+                    <button class="action-btn" id="manual-campsite-btn" style="background:#32cd32;">🏕️ Set Current Location as Campsite</button>
+                    <button class="action-btn" id="report-bug-btn" style="background:#444;">🐛 Submit Bug Report</button>
+                </div>
+                <div class="panel-section">
+                    <button class="action-btn" id="email-login-btn">Log In / Sign Up</button>
+                    <button class="action-btn" id="sign-out-btn" style="background:#900; margin-top:10px;">Sign Out</button>
+                </div>
+            </div>
+
+            <div id="compass-panel" class="slide-panel">
+                <h3>Compass</h3>
+                <div class="panel-section">
+                    <select id="compass-target-select"></select>
+                    <div class="compass-container">
+                        <div id="compass-distance">--- ft</div>
+                        <i id="compass-arrow-icon" class="fa-solid fa-location-arrow compass-arrow"></i>
+                    </div>
+                </div>
             </div>
         </div>
-        <div class="panel-section">
-            <h4>My Crew</h4>
-            <div id="friends-list-container"></div>
-        </div>
-    </div>
-
-    <div id="settings-panel" class="slide-panel">
-        <h3>Settings & Profile</h3>
-        <div class="panel-section">
-            <h4>Identity</h4>
-            <label>Display Name (Map Label)</label>
-            <div style="display:flex; gap:10px;">
-                <input type="text" id="display-name-input">
-                <button class="action-btn" id="save-profile-btn">Save</button>
-            </div>
-            <div id="spotify-settings-container"></div>
-        </div>
-
-        <div class="panel-section">
-            <h4 style="color:#ffaa00;">Dev Login (Temporary)</h4>
-            <div style="display:flex; gap:10px;">
-                <input type="text" id="user-id-input" placeholder="User ID...">
-                <button class="action-btn" id="auth-btn">Set User</button>
-            </div>
-        </div>
-
-        <div class="panel-section">
-            <h4>Actions</h4>
-            <button class="action-btn" id="manual-campsite-btn" style="background:#32cd32;">🏕️ Set Current Location as Campsite</button>
-            <button class="action-btn" id="report-bug-btn" style="background:#444;">🐛 Submit Bug Report</button>
-        </div>
-        <div class="panel-section">
-            <button class="action-btn" id="email-login-btn">Log In / Sign Up</button>
-            <button class="action-btn" id="sign-out-btn" style="background:#900; margin-top:10px;">Sign Out</button>
-        </div>
-    </div>
-
-    <div id="compass-panel" class="slide-panel">
-        <h3>Compass</h3>
-        <div class="panel-section">
-            <select id="compass-target-select"></select>
-            <div class="compass-container">
-                <div id="compass-distance">--- ft</div>
-                <i id="compass-arrow-icon" class="fa-solid fa-location-arrow compass-arrow"></i>
-            </div>
-        </div>
-    </div>
-
-    <div id="bottom-nav">
-        <button class="nav-btn" id="nav-fest"><i class="fa-solid fa-music"></i></button>
-        <button class="nav-btn" id="nav-compass"><i class="fa-solid fa-compass"></i></button>
-        <button class="nav-btn" id="nav-friends"><i class="fa-solid fa-user-group"></i></button>
-        <button class="nav-btn" id="nav-settings"><i class="fa-solid fa-gear"></i></button>
     </div>
 
     <!-- MODALS -->
