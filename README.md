@@ -1,6 +1,6 @@
 # Okee Tracker 2026 - Festival Companion
 
-A comprehensive, real-time companion app for Okeechobee Music & Arts Festival, designed to help friends stay connected, navigate the grounds, and manage their festival experience.
+A comprehensive, real-time companion app for Okeechobee Music & Arts Festival, designed to help friends stay connected, navigate the grounds, and manage their festival experience. Live development beta is currently available on okeecho.be
 
 ## Key Features
 
